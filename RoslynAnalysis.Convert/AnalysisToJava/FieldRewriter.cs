@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RoslynAnalysis.Core;
+using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava
 {
@@ -87,6 +88,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
                     continue;
                 }
 
+                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
                 newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter.WithInitializer(null));
             }
 
@@ -127,31 +129,27 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
                 var variableRewriter = variable;
                 variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
 
-                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter.WithInitializer(null));
+                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
             }
 
             fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
             _declaration = _declaration.ReplaceNode(_declaration.Declaration, fieldDeclaration);
 
-
             return this;
         }
 
         public FieldRewriter VisitLazyServiceModifiers()
         {
-            var modifiers = SyntaxFactory.TokenList();
-            foreach (var modifierSyntax in _declaration.Modifiers)
-            {
-                if (modifierSyntax.IsKind(SyntaxKind.ReadOnlyKeyword))
-                {
-                    continue;
-                }
-
-                modifiers = modifiers.Add(modifierSyntax);
-            }
-
+            var modifiers = SyntaxFactory.TokenList(_declaration.Modifiers.Where(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
             _declaration = _declaration.WithModifiers(modifiers);
+
+            return this;
+        }
+
+        public FieldRewriter VisitType()
+        {
+            _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(TypeRewriter.Build(_declaration.Declaration.Type).Visit().Rewriter()));
 
             return this;
         }

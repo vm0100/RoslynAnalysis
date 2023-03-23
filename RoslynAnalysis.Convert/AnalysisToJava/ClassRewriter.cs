@@ -26,7 +26,7 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
 
     public override ClassRewriter Visit()
     {
-        return VisitComment().VisitAnnotation().VisitDefinedName();
+        return VisitComment().VisitAnnotation().VisitDefinedName().VisitExtendBase();
     }
 
     public override TypeDeclarationSyntax Rewriter()
@@ -45,7 +45,7 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
         _leadingTrivia = SyntaxFactory.TriviaList(
             SyntaxFactory.Trivia(
                 SyntaxFactory.DocumentationCommentTrivia(
-                    SyntaxKind.MultiLineDocumentationCommentTrivia, 
+                    SyntaxKind.MultiLineDocumentationCommentTrivia,
                     SyntaxFactory.SingletonList<XmlNodeSyntax>(
                         SyntaxFactory.XmlText(ConvertComment.GenerateTypeDeclareComment(_declaration))))));
         return this;
@@ -101,7 +101,7 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
             return attrList.WithTrailingTrivia(SyntaxFactory.EndOfLine("\r\n"));
         }));
 
-        _declaration = _declaration.WithAttributeLists(annotationListSyntax).WithLeadingTrivia(_leadingTrivia);
+        _declaration = _declaration.WithAttributeLists(annotationListSyntax);
         return this;
     }
 
@@ -121,6 +121,58 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
         {
             _declaration = _declaration.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Dto") ? className : className + "DTO"));
 
+            return this;
+        }
+
+        return this;
+    }
+
+    public ClassRewriter VisitExtendBase()
+    {
+        var className = _declaration.Identifier.ValueText;
+        var attrList = _declaration.AttributeLists.ToManyList(attr => attr.Attributes);
+
+        var baseTypeList = _declaration.BaseList.Types.ToList(t => t.Type.ToString());
+
+        if (IsEntity(className, attrList, baseTypeList))
+        {
+            if (baseTypeList.Contains("Entity") == false)
+            {
+                return this;
+            }
+            var baseTypeSyntaxList = SyntaxFactory.SeparatedList<BaseTypeSyntax>();
+            foreach (var baseType in _declaration.BaseList.Types)
+            {
+                if (baseType.Type.ToString() == "Entity")
+                {
+                    baseTypeSyntaxList = baseTypeSyntaxList.Add(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName("BaseSlxtEntity")));
+                    continue;
+                }
+                baseTypeSyntaxList = baseTypeSyntaxList.Add(baseType);
+            }
+
+            _declaration = _declaration.WithBaseList(_declaration.BaseList.WithTypes(baseTypeSyntaxList));
+            return this;
+        }
+
+        if(IsDto(className, attrList, baseTypeList))
+        {
+            if (baseTypeList.Contains("DtoBase") == false && baseTypeList.Contains("BaseDto") == false)
+            {
+                return this;
+            }
+            var baseTypeSyntaxList = SyntaxFactory.SeparatedList<BaseTypeSyntax>();
+            foreach (var baseType in _declaration.BaseList.Types)
+            {
+                if (baseType.Type.ToString().In("BaseDto", "DtoBase"))
+                {
+                    baseTypeSyntaxList = baseTypeSyntaxList.Add(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName("DTO")));
+                    continue;
+                }
+                baseTypeSyntaxList = baseTypeSyntaxList.Add(baseType);
+            }
+
+            _declaration = _declaration.WithBaseList(_declaration.BaseList.WithTypes(baseTypeSyntaxList));
             return this;
         }
 

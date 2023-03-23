@@ -4,6 +4,8 @@ using System.Text;
 
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using RoslynAnalysis.Convert.AnalysisToJava;
+
 namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertProperty
@@ -16,10 +18,20 @@ public class ConvertProperty
     /// <returns></returns>
     public static string GenerateCode(PropertyDeclarationSyntax propertyNode, int indent = 0)
     {
-        var comment = ConvertComment.GenerateDeclareCommennt(propertyNode, indent);
-        var type = ConvertType.GenerateCode(propertyNode.Type);
+        propertyNode = PropertyRewriter.Build(propertyNode).Visit().Rewriter();
 
-        var propName = propertyNode.Identifier.ValueText.ToLowerTitleCase();
-        return comment + $"private {type} {propName};".PadIndented(indent);
+        var sbdr = new StringBuilder(propertyNode.Span.End);
+        sbdr.Append(ConvertComment.GenerateDeclareCommennt(propertyNode, indent));
+        if (propertyNode.AttributeLists.Count > 0)
+        {
+            sbdr.AppendLine(propertyNode.AttributeLists.ExpandAndToString(attr => attr.ToString().TrimStart('[').TrimEnd(']'), "\n" + "".PadIndented(indent)).PadIndented(indent));
+        }
+        sbdr.Append("private ".PadIndented(indent));
+        sbdr.Append(propertyNode.Type);
+        sbdr.Append(' ');
+        sbdr.Append(propertyNode.Identifier.ValueText);
+        sbdr.Append(';');
+
+        return sbdr.ToString();
     }
 }

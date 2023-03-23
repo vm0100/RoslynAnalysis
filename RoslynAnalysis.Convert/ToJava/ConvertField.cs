@@ -39,11 +39,6 @@ public class ConvertField
             type = type.PadIndented(indent);
         }
 
-        if (fieldNode.Parent != null && fieldNode.Parent.IsKind(SyntaxKind.ClassDeclaration) && type.Contains("Entity"))
-        {
-            type = type.Replace("Entity", "DTO");
-        }
-
         return string.Join("\n", fieldNode.Declaration.Variables.Select(variableSyntax =>
         {
             var fieldName = variableSyntax.Identifier.ValueText.TrimStart('_');
