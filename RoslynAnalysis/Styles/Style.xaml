@@ -1,0 +1,11 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:convert="clr-namespace:RoslynAnalysis.Converters">
+
+    <convert:StringEmptyVisibilityConverter x:Key="StringEmptyVisibilityConverter" x:Name="StringEmptyVisibilityConverter" />
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="./AvalonEdit.xaml" />
+        <ResourceDictionary Source="./VS2013WindowStyle.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

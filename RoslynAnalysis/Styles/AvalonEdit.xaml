@@ -1,0 +1,112 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:avalonSearch="clr-namespace:ICSharpCode.AvalonEdit.Search;assembly=ICSharpCode.AvalonEdit"
+                    xmlns:hc="https://handyorg.github.io/handycontrol"
+                    xmlns:o="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+                    xmlns:uc="clr-namespace:RoslynAnalysis.UserControls">
+
+    <Geometry x:Key="PreviousGeometry" o:Freeze="True">F1M6.146,13.854l-5-5V8.146l5-5,.708.708L2.707,8H14V9H2.707l4.147,4.146Z</Geometry>
+    <Geometry x:Key="NextGeometry" o:Freeze="True">F1M9.854,3.146l5,5v.708l-5,5-.708-.708L13.293,9H2V8H13.293L9.146,3.854Z</Geometry>
+    <Geometry x:Key="CloseGeometry" o:Freeze="True">F1M8.207,7.5l5.147,5.146-.708.708L7.5,8.207,2.354,13.354l-.708-.708L6.793,7.5,1.646,2.354l.708-.708L7.5,6.793l5.146-5.147.708.708Z</Geometry>
+    <Geometry x:Key="RegularExpressionGeometry" o:Freeze="True">F1M5,12a1,1,0,1,1-1-1A1,1,0,0,1,5,12Zm6.935-7.556-.8-1.391-2.084,1.5L9.3,2H7.7l.252,2.552-2.084-1.5-.8,1.391L7.406,5.5,5.065,6.556l.8,1.391,2.084-1.5L7.7,9H9.3L9.046,6.448l2.084,1.5.8-1.391L9.594,5.5Z</Geometry>
+
+    <Color x:Key="ControlAccentColorKey">#1ba1e2</Color>
+    <Color x:Key="EditorBackgroundColor">White</Color>
+    <Color x:Key="EditorForegroundColor">Black</Color>
+    <Color x:Key="EditorLineNumbersForegroundColor">Black</Color>
+    <Color x:Key="EditorNonPrintableCharacterColor">#3F8080FF</Color>
+    <Color x:Key="EditorLinkTextForegroundColor">#FF4040FF</Color>
+    <Color x:Key="EditorLinkTextBackgroundColor">#00000000</Color>
+
+    <SolidColorBrush x:Key="ControlAccentBrushKey" o:Freeze="True"
+                     Color="{DynamicResource ControlAccentColorKey}" />
+    <SolidColorBrush x:Key="EditorBackground" o:Freeze="True"
+                     Color="{DynamicResource EditorBackgroundColor}" />
+    <SolidColorBrush x:Key="EditorForeground" o:Freeze="True"
+                     Color="{DynamicResource EditorForegroundColor}" />
+    <SolidColorBrush x:Key="EditorLineNumbersForeground" o:Freeze="True"
+                     Color="{DynamicResource EditorLineNumbersForegroundColor}" />
+    <SolidColorBrush x:Key="EditorSelectionBrush" o:Freeze="True" Opacity="0.75"
+                     Color="{DynamicResource ControlAccentColorKey}" />
+    <SolidColorBrush x:Key="EditorSelectionBorder" o:Freeze="True" Opacity="0.75"
+                     Color="{DynamicResource ControlAccentColorKey}" />
+    <SolidColorBrush x:Key="EditorNonPrintableCharacterBrush" o:Freeze="True"
+                     Color="{DynamicResource EditorNonPrintableCharacterColor}" />
+    <SolidColorBrush x:Key="EditorLinkTextForegroundBrush" o:Freeze="True"
+                     Color="{DynamicResource EditorLinkTextForegroundColor}" />
+    <SolidColorBrush x:Key="EditorLinkTextBackgroundBrush" o:Freeze="True"
+                     Color="{DynamicResource EditorLinkTextBackgroundColor}" />
+
+    <Style TargetType="uc:RoslynCodeEditor">
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="ShowLineNumbers" Value="True" />
+        <Setter Property="LineNumbersForeground" Value="{DynamicResource EditorLineNumbersForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource EditorForeground}" />
+    </Style>
+
+    <Style TargetType="avalonSearch:SearchPanel">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type avalonSearch:SearchPanel}">
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                            BorderBrush="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                            BorderThickness="1" Cursor="Arrow">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+
+                                <TextBox Name="PART_searchTextBox" Width="150" Margin="3,3,3,0" Focusable="True">
+                                    <TextBox.Text>
+                                        <Binding Path="SearchPattern"
+                                                 RelativeSource="{RelativeSource TemplatedParent}"
+                                                 UpdateSourceTrigger="PropertyChanged">
+                                            <Binding.ValidationRules>
+                                                <ExceptionValidationRule />
+                                            </Binding.ValidationRules>
+                                        </Binding>
+                                    </TextBox.Text>
+                                </TextBox>
+
+                                <Button hc:IconElement.Geometry="{StaticResource PreviousGeometry}"
+                                        Command="avalonSearch:SearchCommands.FindPrevious"
+                                        Style="{StaticResource ButtonIcon}"
+                                        ToolTip="上一个" />
+
+                                <Button hc:IconElement.Geometry="{StaticResource NextGeometry}"
+                                        Command="avalonSearch:SearchCommands.FindNext"
+                                        Style="{StaticResource ButtonIcon}"
+                                        ToolTip="上一个" />
+
+                                <Button hc:IconElement.Geometry="{StaticResource CloseGeometry}"
+                                        Command="avalonSearch:SearchCommands.CloseSearchPanel"
+                                        Style="{StaticResource ButtonIcon}"
+                                        ToolTip="关闭" />
+                            </StackPanel>
+
+                            <!--<StackPanel Grid.Row="1" Orientation="Horizontal">
+                                <ToggleButton Margin="5"
+                                              hc:IconSwitchElement.Geometry="{StaticResource LeftGeometry}"
+                                              hc:IconSwitchElement.GeometrySelected="{StaticResource RightGeometry}"
+                                              IsChecked="{Binding MatchCase, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <ToggleButton Margin="5"
+                                              hc:IconSwitchElement.Geometry="{StaticResource LeftGeometry}"
+                                              hc:IconSwitchElement.GeometrySelected="{StaticResource RightGeometry}"
+                                              IsChecked="{Binding WholeWords, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <ToggleButton Margin="5"
+                                              hc:IconSwitchElement.Geometry="{StaticResource RegularExpressionGeometry}"
+                                              hc:IconSwitchElement.GeometrySelected="{StaticResource RegularExpressionGeometry}"
+                                              IsChecked="{Binding UseRegex, RelativeSource={RelativeSource TemplatedParent}}" />
+                            </StackPanel>-->
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

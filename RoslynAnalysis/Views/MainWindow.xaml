@@ -1,0 +1,157 @@
+﻿<Window x:Class="RoslynAnalysis.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:RoslynAnalysis.Views"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:model="clr-namespace:RoslynAnalysis.Models"
+        xmlns:uc="clr-namespace:RoslynAnalysis.UserControls"
+        xmlns:vm="clr-namespace:RoslynAnalysis.ViewModels"
+        Title="{Binding Title}"
+        Width="1600"
+        Height="900"
+        MinWidth="140"
+        MinHeight="116"
+        MaxWidth="{x:Static SystemParameters.MaximizedPrimaryScreenWidth}"
+        MaxHeight="{x:Static SystemParameters.MaximizedPrimaryScreenHeight}"
+        Background="{DynamicResource HeaderBackground}"
+        Foreground="{DynamicResource WindowForeground}"
+        ResizeMode="CanResizeWithGrip"
+        SnapsToDevicePixels="True"
+        StateChanged="WindowStateChanged"
+        WindowStyle="None"
+        mc:Ignorable="d">
+
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome x:Name="chrome" CornerRadius="0" GlassFrameThickness="0" NonClientFrameEdges="None" ResizeBorderThickness="8" />
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="header">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="4" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Margin="8,4" HorizontalAlignment="Left" Orientation="Horizontal">
+                <Path Height="20" Margin="4,0"
+                      Fill="{DynamicResource IconBrush}"
+                      Stretch="Uniform">
+                    <Path.Data>
+                        <GeometryGroup FillRule="EvenOdd">
+                            <PathGeometry Figures="M68.89,95.6a6,6,0,0,0,3.93-.44L92.6,85.65A6,6,0,0,0,96,80.24V15.76a6,6,0,0,0-3.4-5.41L72.82.84A6,6,0,0,0,68.34.55,6,6,0,0,0,66,2L34.12,37.26,15.5,22l-1.63-1.4a4,4,0,0,0-3.61-.83,2.55,2.55,0,0,0-.53.18L2.46,23A4,4,0,0,0,0,26.37c0,.1,0,.2,0,.3V69.33c0,.1,0,.2,0,.3A4,4,0,0,0,2.46,73l7.27,3a2.55,2.55,0,0,0,.53.18,4,4,0,0,0,3.61-.83L15.5,74,34.12,58.74,66,94A6,6,0,0,0,68.89,95.6ZM72,27.68,47.21,48,72,68.32ZM12,34.27,24.41,48,12,61.73Z" />
+                        </GeometryGroup>
+                    </Path.Data>
+                </Path>
+
+                <Menu VerticalAlignment="Center"
+                      Style="{DynamicResource MetroMenu}"
+                      WindowChrome.IsHitTestVisibleInChrome="True">
+                    <MenuItem Header="文件">
+                        <MenuItem Command="{Binding SelectDirectoryCommand}" Header="打开目录">
+                            <MenuItem.Icon>
+                                <Image Source="/Resources/OpenProjectFolder.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                    <!--<MenuItem Header="工具">
+                        <MenuItem Command="{Binding SelectDirectoryCommand}" Header="选项">
+                            <MenuItem.Icon>
+                                <Image Source="/Resources/Settings.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>-->
+                </Menu>
+
+                <Border Margin="14,0" Padding="8,0"
+                        Background="{DynamicResource ProjectNameBackground}"
+                        Visibility="{Binding DirPath, Converter={StaticResource StringEmptyVisibilityConverter}}">
+                    <TextBlock Padding="0,1,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource ProjectNameInactiveForeground}"
+                               Style="{DynamicResource ProjNameBlock}"
+                               Text="{Binding DirPath}" />
+                </Border>
+            </StackPanel>
+
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button Click="MinimizeClick" Style="{StaticResource MinimizeButton}" />
+                <Button Click="MaximizeClick" Style="{StaticResource MaximizeButton}" />
+                <Button Click="RestoreDownClick" Style="{StaticResource RestoreDownButton}" />
+                <Button Click="CloseClick" Style="{StaticResource CloseButton}" />
+            </StackPanel>
+        </Grid>
+
+        <DockingManager Name="DockingManager" Grid.Row="1"
+                        ActiveContent="{Binding ActiveDocument, Mode=TwoWay, Converter={StaticResource ActiveDocumentConverter}}"
+                        AnchorableContextMenu="{x:Null}"
+                        DocumentsSource="{Binding OpenFiles, Mode=OneTime}"
+                        IsVirtualizingAnchorable="True" IsVirtualizingDocument="True">
+            <DockingManager.Theme>
+                <Vs2013LightTheme />
+            </DockingManager.Theme>
+
+            <DockingManager.Resources>
+                <DataTemplate DataType="{x:Type model:DocumentModel}">
+                    <Grid Grid.Row="1" ClipToBounds="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <uc:RoslynCodeEditor Document="{Binding TextContent, Mode=OneWay}" SyntaxHighlighting="C#" />
+
+                        <GridSplitter Grid.Row="1" Grid.Column="0" Width="1" VerticalAlignment="Stretch" />
+
+                        <uc:RoslynCodeEditor Grid.Column="1"
+                                             Document="{Binding TranslateTextContent, Mode=OneWay}"
+                                             SyntaxHighlighting="Java" />
+                    </Grid>
+                </DataTemplate>
+            </DockingManager.Resources>
+
+            <DockingManager.DocumentHeaderTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run Text="{Binding Content.Title, Mode=OneWay}" />
+                        <Run Name="DirtyIndicator" Text="" />
+                    </TextBlock>
+                </DataTemplate>
+            </DockingManager.DocumentHeaderTemplate>
+            <DockingManager.LayoutItemContainerStyleSelector>
+                <local:AvalonDockPanesStyleSelector>
+                    <local:AvalonDockPanesStyleSelector.DocumentViewStyle>
+                        <Style TargetType="{x:Type LayoutItem}">
+                            <Setter Property="Title" Value="{Binding Model.Title}" />
+                        </Style>
+                    </local:AvalonDockPanesStyleSelector.DocumentViewStyle>
+                </local:AvalonDockPanesStyleSelector>
+            </DockingManager.LayoutItemContainerStyleSelector>
+
+            <LayoutRoot>
+                <LayoutPanel Orientation="Horizontal">
+                    <LayoutAnchorablePane Name="Documents" DockWidth="300">
+                        <LayoutAnchorable x:Name="DocumentsPane" Title="文件列表" AutoHideWidth="300" CanClose="False">
+                            <DockPanel x:Name="DocumentTree">
+                                <AdornerDecorator>
+                                    <local:DocumentTreeView />
+                                </AdornerDecorator>
+                            </DockPanel>
+                        </LayoutAnchorable>
+                    </LayoutAnchorablePane>
+                    <LayoutDocumentPaneGroup Orientation="Horizontal">
+                        <LayoutDocumentPane />
+                    </LayoutDocumentPaneGroup>
+                </LayoutPanel>
+            </LayoutRoot>
+        </DockingManager>
+    </Grid>
+</Window>
