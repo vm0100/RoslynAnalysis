@@ -18,7 +18,5 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public virtual T Rewriter() => _declaration;
 
-        public abstract RewriterBase<T> Visit();
-
     }
 }

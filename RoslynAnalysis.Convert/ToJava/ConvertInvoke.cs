@@ -76,32 +76,16 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateObjectCreation(ObjectCreationExpressionSyntax exp)
     {
-        exp = ObjectCreationRewriter.Build(exp).Visit().Rewriter();
+        var rewriterExp = ObjectCreationRewriter.Build(exp).Rewriter();
+        if (rewriterExp.IsKind(SyntaxKind.ObjectCreationExpression) == false)
+        {
+            return GenerateCode(rewriterExp);
+        }
 
-        var className = ConvertType.GenerateCode(exp.Type);
         var initializerSyntax = exp.Initializer;
-        if (className.StartsWith("List"))
-        {
-            var listsNewArrayMember = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("Lists"), SyntaxFactory.IdentifierName("newArrayList"));
 
-            // 没有初始化值
-            if (initializerSyntax == null || initializerSyntax.Expressions.Count == 0)
-            {
-                return GenerateCode(SyntaxFactory.InvocationExpression(listsNewArrayMember, SyntaxFactory.ArgumentList()));
-            }
-
-            return GenerateCode(SyntaxFactory.InvocationExpression(listsNewArrayMember, SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(initializerSyntax.Expressions.Select(SyntaxFactory.Argument)))));
-        }
-
-        if (className.StartsWith("HashMap"))
-        {
-            var dictNewArrayMember = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("Maps"), SyntaxFactory.IdentifierName("newHashMap"));
-            if (initializerSyntax == null || initializerSyntax.Expressions.Count == 0)
-            {
-                return GenerateCode(SyntaxFactory.InvocationExpression(dictNewArrayMember, SyntaxFactory.ArgumentList()));
-            }
-        }
-
+        var isDictionary = exp.Type.IsKind(SyntaxKind.GenericName) && (exp.Type as GenericNameSyntax).Identifier.ValueText == "Dictionary";
+        var className = exp.Type.ToString();
         var args = ConvertArgument.GenerateCode(exp.ArgumentList);
 
         var sbdr = new StringBuilder($"new {className}({args})", exp.Span.Length);
@@ -111,10 +95,16 @@ public class ConvertInvoke
             var initializerExp = initializerSyntax.Expressions;
 
             sbdr.Append(" {{ ");
-            foreach (ExpressionSyntax expSyntax in initializerSyntax.Expressions)
+
+            if (isDictionary)
             {
-                sbdr.Append(GenerateCode(expSyntax) + "; ");
+                sbdr.Append(initializerSyntax.Expressions.Select(iexp => $"add({(iexp as InitializerExpressionSyntax).Expressions.Select(GenerateCode).ExpandAndToString(",")})").ExpandAndToString("; "));
             }
+            else
+            {
+                sbdr.Append(initializerSyntax.Expressions.Select(GenerateCode).ExpandAndToString("; "));
+            }
+
             sbdr.Append("}}");
         }
 

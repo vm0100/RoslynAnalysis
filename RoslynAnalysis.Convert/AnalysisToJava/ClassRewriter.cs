@@ -24,13 +24,10 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
 
     public static ClassRewriter Build(TypeDeclarationSyntax typeDeclaration) => new ClassRewriter(typeDeclaration);
 
-    public override ClassRewriter Visit()
-    {
-        return VisitComment().VisitAnnotation().VisitDefinedName().VisitExtendBase();
-    }
-
     public override TypeDeclarationSyntax Rewriter()
     {
+        VisitComment().VisitAnnotation().VisitDefinedName().VisitExtendBase();
+
         _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
         return base.Rewriter();
     }

@@ -18,7 +18,7 @@ public class ConvertField
     /// <returns></returns>
     public static string GenerateCode(FieldDeclarationSyntax fieldNode, int indent = 0)
     {
-        fieldNode = FieldRewriter.Build(fieldNode).Visit().Rewriter();
+        fieldNode = FieldRewriter.Build(fieldNode).Rewriter();
 
         var comment = ConvertComment.GenerateDeclareCommennt(fieldNode, indent);
         var attribute = string.Join("\n", fieldNode.AttributeLists.SelectMany(attrList => attrList.Attributes.Select(attr => "@" + attr.Name.ToString() + (attr.ArgumentList == null || attr.ArgumentList.Arguments.Count < 1 ? "" : "(" + string.Join(", ", attr.ArgumentList.Arguments.Select(arg => ConvertInvoke.GenerateCode(arg.Expression))) + ")"))));

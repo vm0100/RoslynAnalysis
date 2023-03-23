@@ -19,14 +19,9 @@ public class TypeRewriter : RewriterBase<TypeSyntax>
 
     public static TypeRewriter Build(TypeSyntax typeDeclaration) => new TypeRewriter(typeDeclaration);
 
-    public override TypeRewriter Visit()
-    {
-        _declaration = VisitType(_declaration);
-        return this;
-    }
-
     public override TypeSyntax Rewriter()
     {
+        _declaration = VisitType(_declaration);
         return base.Rewriter();
     }
 

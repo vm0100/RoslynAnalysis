@@ -12,7 +12,7 @@ public class ConvertTypeDeclare
 {
     public static string GenerateCode(TypeDeclarationSyntax classNode, int indent = 0)
     {
-        classNode = ClassRewriter.Build(classNode).Visit().Rewriter();
+        classNode = ClassRewriter.Build(classNode).Rewriter();
 
         var sbdr = new StringBuilder(10000);
 

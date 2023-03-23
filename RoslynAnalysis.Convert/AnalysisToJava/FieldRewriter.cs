@@ -26,13 +26,10 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public static FieldRewriter Build(FieldDeclarationSyntax declaration) => new FieldRewriter(declaration);
 
-        public override RewriterBase<FieldDeclarationSyntax> Visit()
-        {
-            return VisitLazyService().VisitRepository().VisitVarDefine().VisitType();
-        }
-
         public override FieldDeclarationSyntax Rewriter()
         {
+            VisitLazyService().VisitRepository().VisitVarDefine().VisitType();
+
             // 还原注释
             _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
             return base.Rewriter();
@@ -112,20 +109,20 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
             typeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
             fieldDeclaration = fieldDeclaration.WithType(SyntaxFactory.IdentifierName("I" + typeSyntax.ToString() + "Dao"));
 
-            // 更名
-            var variables = fieldDeclaration.Variables;
-            var newVariables = variables;
-            foreach (var variable in variables)
-            {
-                var variableRewriter = variable;
-                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
+            //// 更名
+            //var variables = fieldDeclaration.Variables;
+            //var newVariables = variables;
+            //foreach (var variable in variables)
+            //{
+            //    var variableRewriter = variable;
+            //    variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
 
-                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
-            }
+            //    newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
+            //}
 
-            fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
+            //fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
-            _declaration = _declaration.ReplaceNode(_declaration.Declaration, fieldDeclaration);
+            _declaration = _declaration.WithDeclaration(fieldDeclaration);
 
             return this;
         }
@@ -141,7 +138,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
         public FieldRewriter VisitType()
         {
             var type = _declaration.Declaration.Type;
-            var newType = TypeRewriter.Build(type).Visit().Rewriter();
+            var newType = TypeRewriter.Build(type).Rewriter();
 
             _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
 

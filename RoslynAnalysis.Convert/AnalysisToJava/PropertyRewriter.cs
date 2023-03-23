@@ -25,13 +25,9 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public static PropertyRewriter Build(PropertyDeclarationSyntax declaration) => new PropertyRewriter(declaration);
 
-        public override RewriterBase<PropertyDeclarationSyntax> Visit()
-        {
-            return VisitDefined().VisitAnnotation().VisitType();
-        }
-
         public override PropertyDeclarationSyntax Rewriter()
         {
+            VisitDefined().VisitAnnotation().VisitType();
             // 还原注释
             _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
             return base.Rewriter();
@@ -70,7 +66,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public PropertyRewriter VisitType()
         {
-            _declaration = _declaration.WithType(TypeRewriter.Build(_declaration.Type).Visit().Rewriter());
+            _declaration = _declaration.WithType(TypeRewriter.Build(_declaration.Type).Rewriter());
 
             return this;
         }
