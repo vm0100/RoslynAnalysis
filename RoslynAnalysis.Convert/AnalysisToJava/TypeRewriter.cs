@@ -43,7 +43,7 @@ public class TypeRewriter : RewriterBase<TypeSyntax>
 
             genericType = genericType.WithIdentifier(SyntaxFactory.Identifier(ConvertCommon.TypeToJava(syntax)));
 
-            genericType = genericType.WithTypeArgumentList(genericType.TypeArgumentList.WithArguments(SyntaxFactory.SeparatedList(genericType.TypeArgumentList.Arguments.Select(VisitGeneric))));
+            genericType = genericType.WithTypeArgumentList(genericType.TypeArgumentList.WithArguments(SyntaxFactory.SeparatedList(genericType.TypeArgumentList.Arguments.Select(VisitType))));
 
             return genericType;
         }
