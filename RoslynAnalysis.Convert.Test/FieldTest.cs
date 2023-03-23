@@ -15,13 +15,13 @@ namespace RoslynAnalysis.Convert.Test
         void FieldRewriteTest()
         {
             var code = @"
-LazyService<EntityService<User>> _userEntityService = new LazyService<EntityService<User>>();";
+var i = new List<string>;";
 
             var expected = @$"
-[@Resource]IUserDao userDao;";
+Integer i = 0";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = FieldRewriter.Build(memberSyntax as FieldDeclarationSyntax).VisitDefined().Rewriter();
+            memberSyntax = FieldRewriter.Build(memberSyntax as FieldDeclarationSyntax).VisitVarDefine().Rewriter();
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expected.Trim(), actual);
         }

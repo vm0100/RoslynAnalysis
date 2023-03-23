@@ -4,6 +4,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using RoslynAnalysis.Convert.AnalysisToJava;
+
 namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertInvoke
@@ -74,6 +76,8 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateObjectCreation(ObjectCreationExpressionSyntax exp)
     {
+        exp = ObjectCreationRewriter.Build(exp).Visit().Rewriter();
+
         var className = ConvertType.GenerateCode(exp.Type);
         var initializerSyntax = exp.Initializer;
         if (className.StartsWith("List"))
