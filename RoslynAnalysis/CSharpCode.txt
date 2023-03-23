@@ -1,0 +1,28 @@
+switch (propertyType)
+            {
+                case "Lists":
+                    return "Lists";
+
+                case "Maps":
+                    return "Maps";
+                // 实体工厂
+                case "EntityFactory":
+                    return "BaseSlxtEntity";
+                // Guid生成器
+                case "GuidHelper":
+                    return "GuidGenerator";
+                // DTO基类
+                case "BaseDto":
+                case "DtoBase":
+                    return "DTO";
+                // 实体状态
+                case "EntityState":
+                    return "EntityState";
+
+                default:
+                    if (propertyType.EndsWith("Helper"))
+                    {
+                        return propertyType[..(propertyType.Length - 6)] + "Util";
+                    }
+                    return propertyType;
+            }
