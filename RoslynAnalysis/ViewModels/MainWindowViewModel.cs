@@ -86,6 +86,8 @@ public partial class MainWindowViewModel : ObservableRecipient
                 }
             });
 
+        var defaultDocument = new DocumentModel();
+        _openFiles.Add(defaultDocument);
 #if DEBUG
 
         DirPath = "D:\\代码备份\\售楼系统\\src";
@@ -96,10 +98,7 @@ public partial class MainWindowViewModel : ObservableRecipient
 
         _searchInputSubject.OnNext("");
 
-        var defaultDocument = new DocumentModel();
         defaultDocument.TextContent.Text = File.ReadAllText(@"./CSharpCode.txt");
-        _openFiles.Add(defaultDocument);
-
 #endif
         //githubClient.Repository.Release.GetAll();
 
