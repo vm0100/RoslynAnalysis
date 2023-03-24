@@ -35,7 +35,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public PropertyRewriter VisitDefined()
         {
-            _declaration = _declaration.WithIdentifier(SyntaxFactory.Identifier(_declaration.Identifier.ValueText.ToLowerTitleCase()));
+            _declaration = _declaration.WithIdentifier(SyntaxFactory.Identifier(_declaration.Identifier.ValueText.TrimStart('_').ToLowerTitleCase()));
 
             return this;
         }

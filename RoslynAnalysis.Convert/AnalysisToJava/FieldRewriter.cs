@@ -28,7 +28,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public override FieldDeclarationSyntax Rewriter()
         {
-            VisitLazyService().VisitRepository().VisitVarDefine().VisitType();
+           VisitVarDefine().VisitLazyService().VisitRepository().VisitType();
 
             // 还原注释
             _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
@@ -109,18 +109,19 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
             typeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
             fieldDeclaration = fieldDeclaration.WithType(SyntaxFactory.IdentifierName("I" + typeSyntax.ToString() + "Dao"));
 
-            //// 更名
-            //var variables = fieldDeclaration.Variables;
-            //var newVariables = variables;
-            //foreach (var variable in variables)
-            //{
-            //    var variableRewriter = variable;
-            //    variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
+            // 更名
+            var variables = fieldDeclaration.Variables;
+            var newVariables = variables;
+            foreach (var variable in variables)
+            {
+                var variableRewriter = variable;
+                //variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
+                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
 
-            //    newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
-            //}
+                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
+            }
 
-            //fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
+            fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
             _declaration = _declaration.WithDeclaration(fieldDeclaration);
 
@@ -138,9 +139,20 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
         public FieldRewriter VisitType()
         {
             var type = _declaration.Declaration.Type;
-            var newType = TypeRewriter.Build(type).Rewriter();
 
-            _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
+            if (type.IsKind(SyntaxKind.GenericName) == false)
+            {
+                var newType = TypeRewriter.Build(type).Rewriter();
+                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return this;
+            }
+
+            var genericNameText = (type as GenericNameSyntax).Identifier.ValueText;
+            if (genericNameText == "Dictionary" || genericNameText == "IDictionary")
+            {
+                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(SyntaxFactory.IdentifierName("Map")).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return this;
+            }
 
             return this;
         }
@@ -158,7 +170,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
             // 数字全是 NumericLiteralToken 没法儿判断类型
             fieldDeclaration = fieldDeclaration.WithType(((SyntaxKind)firstVariableValue.RawKind switch
             {
-                SyntaxKind.StringLiteralExpression => SyntaxFactory.IdentifierName(nameof(String)),
+                SyntaxKind.StringLiteralExpression or SyntaxKind.InterpolatedStringExpression => SyntaxFactory.IdentifierName(nameof(String)),
                 SyntaxKind.TrueLiteralExpression or SyntaxKind.FalseLiteralExpression => SyntaxFactory.IdentifierName(nameof(Boolean)),
                 SyntaxKind.CharacterLiteralExpression => SyntaxFactory.IdentifierName(nameof(Char)),
                 SyntaxKind.ObjectCreationExpression => (firstVariableValue as ObjectCreationExpressionSyntax).Type,

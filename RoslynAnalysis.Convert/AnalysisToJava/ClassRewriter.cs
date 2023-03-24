@@ -64,6 +64,7 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
         else if (isDto)
         {
             annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "DtoDescription");
+            annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Data")));
         }
         else if (isService)
         {

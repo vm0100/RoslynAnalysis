@@ -45,7 +45,7 @@ public class ConvertInvoke
             // 取类型定义名称
             SyntaxKind.PredefinedType => ConvertCommon.TypeToJava((PredefinedTypeSyntax)exp),
             // 后置一元运算符 比如i++;i--
-            SyntaxKind.PostIncrementExpression or SyntaxKind.PostDecrementExpression => GeneratePostfixUnary((PostfixUnaryExpressionSyntax)exp),
+            SyntaxKind.PostIncrementExpression or SyntaxKind.PostDecrementExpression or SyntaxKind.PreIncrementExpression or SyntaxKind.PreDecrementExpression => GeneratePostfixUnary((PostfixUnaryExpressionSyntax)exp),
             // 逻辑否
             SyntaxKind.LogicalNotExpression => GenerateLogicalNot((PrefixUnaryExpressionSyntax)exp),
             // 括号
@@ -84,7 +84,6 @@ public class ConvertInvoke
 
         var initializerSyntax = exp.Initializer;
 
-        var isDictionary = exp.Type.IsKind(SyntaxKind.GenericName) && (exp.Type as GenericNameSyntax).Identifier.ValueText == "Dictionary";
         var className = exp.Type.ToString();
         var args = ConvertArgument.GenerateCode(exp.ArgumentList);
 
@@ -95,16 +94,7 @@ public class ConvertInvoke
             var initializerExp = initializerSyntax.Expressions;
 
             sbdr.Append(" {{ ");
-
-            if (isDictionary)
-            {
-                sbdr.Append(initializerSyntax.Expressions.Select(iexp => $"add({(iexp as InitializerExpressionSyntax).Expressions.Select(GenerateCode).ExpandAndToString(",")})").ExpandAndToString("; "));
-            }
-            else
-            {
-                sbdr.Append(initializerSyntax.Expressions.Select(GenerateCode).ExpandAndToString("; "));
-            }
-
+            sbdr.Append(initializerSyntax.Expressions.Select(iexp => GenerateCode(iexp) + ";").ExpandAndToString(" "));
             sbdr.Append("}}");
         }
 
