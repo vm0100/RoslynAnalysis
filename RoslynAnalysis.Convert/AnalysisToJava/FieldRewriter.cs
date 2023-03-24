@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RoslynAnalysis.Core;
+using RoslynAnalysis.Convert.ToJava;
+using System.Xml.Linq;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava
 {
@@ -24,26 +26,13 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public static FieldRewriter Build(FieldDeclarationSyntax declaration) => new FieldRewriter(declaration);
 
-        public override RewriterBase<FieldDeclarationSyntax> Visit()
-        {
-            return VisitDefined();
-        }
-
         public override FieldDeclarationSyntax Rewriter()
         {
+           VisitVarDefine().VisitLazyService().VisitRepository().VisitType();
+
             // 还原注释
             _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
             return base.Rewriter();
-        }
-
-        /// <summary>
-        /// 语法转换
-        /// </summary>
-        public FieldRewriter VisitDefined()
-        {
-            VisitLazyService().VisitRepository();
-
-            return this;
         }
 
         /// <summary>
@@ -67,7 +56,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
                 return this;
             }
 
-            typeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
+            typeSyntax = (genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax).WithTrailingTrivia(typeSyntax.GetTrailingTrivia());
             fieldDeclaration = fieldDeclaration.WithType(typeSyntax);
 
             // 将服务初始化语句移除
@@ -87,6 +76,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
                     continue;
                 }
 
+                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
                 newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter.WithInitializer(null));
             }
 
@@ -125,33 +115,69 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
             foreach (var variable in variables)
             {
                 var variableRewriter = variable;
-                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
+                //variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
+                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
 
-                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter.WithInitializer(null));
+                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
             }
 
             fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
-            _declaration = _declaration.ReplaceNode(_declaration.Declaration, fieldDeclaration);
-
+            _declaration = _declaration.WithDeclaration(fieldDeclaration);
 
             return this;
         }
 
         public FieldRewriter VisitLazyServiceModifiers()
         {
-            var modifiers = SyntaxFactory.TokenList();
-            foreach (var modifierSyntax in _declaration.Modifiers)
-            {
-                if (modifierSyntax.IsKind(SyntaxKind.ReadOnlyKeyword))
-                {
-                    continue;
-                }
+            var modifiers = SyntaxFactory.TokenList(_declaration.Modifiers.Where(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
+            _declaration = _declaration.WithModifiers(modifiers);
 
-                modifiers = modifiers.Add(modifierSyntax);
+            return this;
+        }
+
+        public FieldRewriter VisitType()
+        {
+            var type = _declaration.Declaration.Type;
+
+            if (type.IsKind(SyntaxKind.GenericName) == false)
+            {
+                var newType = TypeRewriter.Build(type).Rewriter();
+                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return this;
             }
 
-            _declaration = _declaration.WithModifiers(modifiers);
+            var genericNameText = (type as GenericNameSyntax).Identifier.ValueText;
+            if (genericNameText == "Dictionary" || genericNameText == "IDictionary")
+            {
+                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(SyntaxFactory.IdentifierName("Map")).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return this;
+            }
+
+            return this;
+        }
+
+        public FieldRewriter VisitVarDefine()
+        {
+            var fieldDeclaration = _declaration.Declaration;
+            var typeSyntax = fieldDeclaration.Type;
+            if (typeSyntax.IsVar == false)
+            {
+                return this;
+            }
+            var firstVariableValue = fieldDeclaration.Variables[0].Initializer.Value;
+
+            // 数字全是 NumericLiteralToken 没法儿判断类型
+            fieldDeclaration = fieldDeclaration.WithType(((SyntaxKind)firstVariableValue.RawKind switch
+            {
+                SyntaxKind.StringLiteralExpression or SyntaxKind.InterpolatedStringExpression => SyntaxFactory.IdentifierName(nameof(String)),
+                SyntaxKind.TrueLiteralExpression or SyntaxKind.FalseLiteralExpression => SyntaxFactory.IdentifierName(nameof(Boolean)),
+                SyntaxKind.CharacterLiteralExpression => SyntaxFactory.IdentifierName(nameof(Char)),
+                SyntaxKind.ObjectCreationExpression => (firstVariableValue as ObjectCreationExpressionSyntax).Type,
+                _ => typeSyntax
+            }).WithTrailingTrivia(typeSyntax.GetTrailingTrivia()));
+
+            _declaration = _declaration.WithDeclaration(fieldDeclaration);
 
             return this;
         }

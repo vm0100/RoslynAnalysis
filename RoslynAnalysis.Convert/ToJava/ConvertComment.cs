@@ -12,19 +12,6 @@ namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertComment
 {
-    public static string GenerateCode(SyntaxNode syntaxNode, int indent = 0)
-    {
-        if (syntaxNode.HasLeadingTrivia)
-        {
-            var sbdr = new StringBuilder(1000);
-            sbdr.AppendLine("/**".PadIndented(indent));
-            sbdr.AppendLine(AnalysisToComment(syntaxNode.GetLeadingTrivia().FirstOrDefault(SyntaxExtensions.IsSingleLineDocumentationComment).ToString(), indent));
-            sbdr.AppendLine(" */".PadIndented(indent));
-            return sbdr.ToString();
-        }
-        return string.Empty;
-    }
-
     public static string GenerateTypeDeclareComment(TypeDeclarationSyntax classNode, int indent = 0)
     {
         if (!classNode.HasLeadingTrivia)
@@ -60,16 +47,6 @@ public class ConvertComment
         sbdr.AppendLine(AnalysisToComment(syntaxTriviaList.FirstOrDefault(SyntaxExtensions.IsSingleLineDocumentationComment).ToString(), indent));
         sbdr.AppendLine(" */".PadIndented(indent));
         return sbdr.ToString();
-    }
-
-    public static string GenerateSingleComment(SyntaxNode syntaxNode, int indent = 0)
-    {
-        return syntaxNode.ToString().PadIndented(indent);
-    }
-
-    public static string GenerateMultilineComment(SyntaxNode syntaxNode, int indent = 0)
-    {
-        return syntaxNode.ToString().PadIndented(indent);
     }
 
     public static string AnalysisToComment(string comment, int indent = 0)

@@ -4,6 +4,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using RoslynAnalysis.Convert.AnalysisToJava;
+
 namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertInvoke
@@ -43,7 +45,7 @@ public class ConvertInvoke
             // 取类型定义名称
             SyntaxKind.PredefinedType => ConvertCommon.TypeToJava((PredefinedTypeSyntax)exp),
             // 后置一元运算符 比如i++;i--
-            SyntaxKind.PostIncrementExpression or SyntaxKind.PostDecrementExpression => GeneratePostfixUnary((PostfixUnaryExpressionSyntax)exp),
+            SyntaxKind.PostIncrementExpression or SyntaxKind.PostDecrementExpression or SyntaxKind.PreIncrementExpression or SyntaxKind.PreDecrementExpression => GeneratePostfixUnary((PostfixUnaryExpressionSyntax)exp),
             // 逻辑否
             SyntaxKind.LogicalNotExpression => GenerateLogicalNot((PrefixUnaryExpressionSyntax)exp),
             // 括号
@@ -74,30 +76,15 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateObjectCreation(ObjectCreationExpressionSyntax exp)
     {
-        var className = ConvertType.GenerateCode(exp.Type);
+        var rewriterExp = ObjectCreationRewriter.Build(exp).Rewriter();
+        if (rewriterExp.IsKind(SyntaxKind.ObjectCreationExpression) == false)
+        {
+            return GenerateCode(rewriterExp);
+        }
+
         var initializerSyntax = exp.Initializer;
-        if (className.StartsWith("List"))
-        {
-            var listsNewArrayMember = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("Lists"), SyntaxFactory.IdentifierName("newArrayList"));
 
-            // 没有初始化值
-            if (initializerSyntax == null || initializerSyntax.Expressions.Count == 0)
-            {
-                return GenerateCode(SyntaxFactory.InvocationExpression(listsNewArrayMember, SyntaxFactory.ArgumentList()));
-            }
-
-            return GenerateCode(SyntaxFactory.InvocationExpression(listsNewArrayMember, SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(initializerSyntax.Expressions.Select(SyntaxFactory.Argument)))));
-        }
-
-        if (className.StartsWith("HashMap"))
-        {
-            var dictNewArrayMember = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("Maps"), SyntaxFactory.IdentifierName("newHashMap"));
-            if (initializerSyntax == null || initializerSyntax.Expressions.Count == 0)
-            {
-                return GenerateCode(SyntaxFactory.InvocationExpression(dictNewArrayMember, SyntaxFactory.ArgumentList()));
-            }
-        }
-
+        var className = exp.Type.ToString();
         var args = ConvertArgument.GenerateCode(exp.ArgumentList);
 
         var sbdr = new StringBuilder($"new {className}({args})", exp.Span.Length);
@@ -107,10 +94,7 @@ public class ConvertInvoke
             var initializerExp = initializerSyntax.Expressions;
 
             sbdr.Append(" {{ ");
-            foreach (ExpressionSyntax expSyntax in initializerSyntax.Expressions)
-            {
-                sbdr.Append(GenerateCode(expSyntax) + "; ");
-            }
+            sbdr.Append(initializerSyntax.Expressions.Select(iexp => GenerateCode(iexp) + ";").ExpandAndToString(" "));
             sbdr.Append("}}");
         }
 

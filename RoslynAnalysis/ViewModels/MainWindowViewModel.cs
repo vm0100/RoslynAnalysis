@@ -88,8 +88,11 @@ public partial class MainWindowViewModel : ObservableRecipient
 
 #if DEBUG
 
-        DirPath = AppDomain.CurrentDomain.BaseDirectory;
-        DirPath = DirPath[0..(DirPath.IndexOf("bin"))];
+        DirPath = "D:\\代码备份\\售楼系统\\src";
+        if (DirPath.Contains("bin"))
+        {
+            DirPath = DirPath[0..(DirPath.IndexOf("bin"))];
+        }
 
         _searchInputSubject.OnNext("");
 
