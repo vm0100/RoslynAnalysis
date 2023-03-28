@@ -12,7 +12,7 @@ namespace RoslynAnalysis.Convert.Test
     public class FieldTest
     {
         [Fact(DisplayName = "实体服务转换测试")]
-        void FieldRewriteTest()
+        private void FieldRewriteTest()
         {
             var code = @"
 var i = new List<string>;";

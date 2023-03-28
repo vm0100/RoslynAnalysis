@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using RoslynAnalysis.Convert.ToJava;
 
@@ -45,5 +40,4 @@ public class TypeRewriter : RewriterBase<TypeSyntax>
 
         return SyntaxFactory.IdentifierName(ConvertCommon.TypeToJava(syntax));
     }
-
 }

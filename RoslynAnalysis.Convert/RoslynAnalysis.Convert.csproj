@@ -11,6 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Microsoft.CodeAnalysis" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
     <Using Include="RoslynAnalysis.Core" />
   </ItemGroup>
 

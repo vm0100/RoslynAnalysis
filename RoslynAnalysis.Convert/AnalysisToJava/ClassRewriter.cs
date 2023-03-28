@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using RoslynAnalysis.Convert.ToJava;
 
@@ -153,7 +148,7 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
             return this;
         }
 
-        if(IsDto(className, attrList, baseTypeList))
+        if (IsDto(className, attrList, baseTypeList))
         {
             if (baseTypeList.Contains("DtoBase") == false && baseTypeList.Contains("BaseDto") == false)
             {

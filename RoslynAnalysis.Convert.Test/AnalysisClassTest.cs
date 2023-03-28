@@ -9,7 +9,6 @@ using RoslynAnalysis.Convert.AnalysisToJava;
 
 namespace RoslynAnalysis.Convert.Test
 {
-
     public class AnalysisClassTest
     {
         [Fact(DisplayName = "类注释转换测试")]
@@ -57,8 +56,6 @@ public class ConvertArgument{{}}";
             var actual = "\r\n" + memberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
-
-
 
         [Theory(DisplayName = "类名称转换测试"),
             InlineData("public class ConvertArgument:Entity {}", "public class ConvertArgumentEntity:Entity{}")]

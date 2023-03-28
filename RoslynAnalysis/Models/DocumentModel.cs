@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Windows.Controls;
+using System.Threading;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
@@ -15,9 +14,6 @@ using ICSharpCode.AvalonEdit.Document;
 
 using RoslynAnalysis.Consts;
 using RoslynAnalysis.Convert;
-
-using System.Windows.Threading;
-using System.Threading;
 using RoslynAnalysis.Core;
 
 namespace RoslynAnalysis.Models;

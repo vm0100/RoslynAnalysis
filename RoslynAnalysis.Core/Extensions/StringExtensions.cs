@@ -89,5 +89,4 @@ public static class StringExtensions
 
     public static bool IsInterfaceDeclare(this string typeName)
         => !typeName.IsNullOrWhiteSpace() && typeName.Length > 1 && typeName.StartsWith('I') && char.IsUpper(typeName[1]);
-
 }

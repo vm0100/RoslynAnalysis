@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 
 using AvalonDock.Themes;
 
@@ -57,6 +52,7 @@ public partial class MainWindowViewModel : ObservableRecipient
     private ObservableCollection<DocumentModel> _openFiles = new ObservableCollection<DocumentModel>();
 
     private string _searchInput;
+
     public string SearchInput
     {
         get => _searchInput;

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava;
@@ -33,6 +35,11 @@ public class FunctionBodyRewriter : RewriterBase<BlockSyntax>
          * 5. 对象初始化
          * 6. 字段赋值
          */
+
+        var nodes = _declaration.DescendantNodes();
+
+        nodes.Where(a=>a.IsKind(SyntaxKind.ExpressionStatement));
+
 
         return base.Rewriter();
     }

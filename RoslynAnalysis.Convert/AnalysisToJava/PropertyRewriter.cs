@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RoslynAnalysis.Core;
-using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava
 {
     public class PropertyRewriter : RewriterBase<PropertyDeclarationSyntax>
     {
         private SyntaxTriviaList _leadingTrivia;
+
         public PropertyRewriter(PropertyDeclarationSyntax declaration) : base(declaration)
         {
             _leadingTrivia = declaration.GetLeadingTrivia();
@@ -70,6 +63,5 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
             return this;
         }
-
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -10,7 +9,6 @@ using RoslynAnalysis.Convert.AnalysisToJava;
 
 namespace RoslynAnalysis.Convert.Test
 {
-
     public class ObjectCreationRewriteTest
     {
         [Theory(DisplayName = "重写List创建测试"),

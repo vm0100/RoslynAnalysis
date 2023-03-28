@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RoslynAnalysis.Core;
-using RoslynAnalysis.Convert.ToJava;
-using System.Xml.Linq;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava
 {
     public class FieldRewriter : RewriterBase<FieldDeclarationSyntax>
     {
         private SyntaxTriviaList _leadingTrivia;
+
         public FieldRewriter(FieldDeclarationSyntax declaration) : base(declaration)
         {
             _leadingTrivia = declaration.GetLeadingTrivia();
@@ -28,7 +20,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
         public override FieldDeclarationSyntax Rewriter()
         {
-           VisitVarDefine().VisitLazyService().VisitRepository().VisitType();
+            VisitVarDefine().VisitLazyService().VisitRepository().VisitType();
 
             // 还原注释
             _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);

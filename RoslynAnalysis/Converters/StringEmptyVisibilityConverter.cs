@@ -4,8 +4,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Data;
 
-using RoslynAnalysis.Models;
-
 namespace RoslynAnalysis.Converters
 {
     public class StringEmptyVisibilityConverter : IValueConverter

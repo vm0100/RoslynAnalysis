@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava;
 
@@ -21,7 +17,7 @@ public class FunctionRewriter : RewriterBase<MethodDeclarationSyntax>
 
     public override MethodDeclarationSyntax Rewriter()
     {
-        if(_blockSyntax != null)
+        if (_blockSyntax != null)
         {
             _declaration = _declaration.WithBody(FunctionBodyRewriter.Build(_blockSyntax).Rewriter());
         }
@@ -31,7 +27,4 @@ public class FunctionRewriter : RewriterBase<MethodDeclarationSyntax>
 
         return base.Rewriter();
     }
-
-
-
 }

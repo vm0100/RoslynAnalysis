@@ -2,10 +2,6 @@
 using System.Text;
 using System.Xml.Linq;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 using SyntaxExtensions = RoslynAnalysis.Core.SyntaxExtensions;
 
 namespace RoslynAnalysis.Convert.ToJava;

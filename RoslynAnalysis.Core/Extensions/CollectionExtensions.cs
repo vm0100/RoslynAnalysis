@@ -67,7 +67,6 @@ public static class CollectionExtensions
         return sb.ToString();
     }
 
-
     public static List<TResult> ToList<T, TResult>(this IEnumerable<T> collection, Func<T, TResult> selector)
     {
         return collection.Select(selector).ToList();
@@ -77,5 +76,4 @@ public static class CollectionExtensions
     {
         return collection.SelectMany(selector).ToList();
     }
-
 }
