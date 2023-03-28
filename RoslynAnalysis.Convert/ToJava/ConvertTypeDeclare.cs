@@ -93,7 +93,7 @@ public class ConvertTypeDeclare
     {
         var sbdr = new StringBuilder(constructorDeclaration.Span.End);
 
-        sbdr.Append(ConvertComment.GenerateDeclareCommennt(constructorDeclaration, indent));
+        sbdr.Append(ConvertComment.GenerateDeclareCommennt(constructorDeclaration.GetTrailingTrivia(), indent));
         sbdr.Append(constructorDeclaration.Modifiers.ToString().Trim().PadIndented(indent) + " ");
         sbdr.Append(constructorDeclaration.Identifier.ValueText);
         sbdr.Append('(');

@@ -19,7 +19,7 @@ public class ConvertProperty
         propertyNode = new PropertyRewriter().Visit(propertyNode) as PropertyDeclarationSyntax;
 
         var sbdr = new StringBuilder(propertyNode.Span.End);
-        sbdr.Append(ConvertComment.GenerateDeclareCommennt(propertyNode, indent));
+        sbdr.Append(ConvertComment.GenerateDeclareCommennt(propertyNode.GetLeadingTrivia(), indent));
         if (propertyNode.AttributeLists.Count > 0)
         {
             sbdr.AppendLine(propertyNode.AttributeLists.ExpandAndToString(attr => attr.ToString().TrimStart('[').TrimEnd(']'), "\n" + "".PadIndented(indent)).PadIndented(indent));

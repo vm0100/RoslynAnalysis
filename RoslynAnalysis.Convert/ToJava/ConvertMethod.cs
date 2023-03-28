@@ -13,7 +13,7 @@ public class ConvertMethod
         methodNode = new FunctionRewriter().Visit(methodNode) as MethodDeclarationSyntax;
 
         var sbdr = new StringBuilder(2000);
-        sbdr.Append(ConvertComment.GenerateDeclareCommennt(methodNode, indent));
+        sbdr.Append(ConvertComment.GenerateDeclareCommennt(methodNode.GetLeadingTrivia(), indent));
         var modifier = string.Join(" ", methodNode.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
 
         sbdr.Append($"{modifier} {ConvertType.GenerateCode(methodNode.ReturnType)} {methodNode.Identifier.ValueText.ToLowerTitleCase()}({ConvertParameter.GenerateCode(methodNode.ParameterList)})".PadIndented(indent));
@@ -34,7 +34,7 @@ public class ConvertMethod
         localFunction = new FunctionRewriter().Visit(localFunction) as LocalFunctionStatementSyntax;
 
         var sbdr = new StringBuilder(2000);
-        sbdr.Append(ConvertComment.GenerateDeclareCommennt(localFunction, indent));
+        sbdr.Append(ConvertComment.GenerateDeclareCommennt(localFunction.GetTrailingTrivia(), indent));
         var modifier = string.Join(" ", localFunction.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
 
         sbdr.Append($"{modifier} {ConvertType.GenerateCode(localFunction.ReturnType)} {localFunction.Identifier.ValueText.ToLowerTitleCase()}({ConvertParameter.GenerateCode(localFunction.ParameterList)})".PadIndented(indent));

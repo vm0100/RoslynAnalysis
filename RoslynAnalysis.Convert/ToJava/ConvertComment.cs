@@ -8,39 +8,33 @@ namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertComment
 {
-    public static string GenerateTypeDeclareComment(TypeDeclarationSyntax classNode, int indent = 0)
+    public static string GenerateClassComment(SyntaxTrivia commentNode, int indent = 0)
     {
-        if (!classNode.HasLeadingTrivia)
-        {
-            return string.Empty;
-        }
-
-        var sbdr = new StringBuilder(1000);
+        var sbdr = new StringBuilder(commentNode.Span.End);
 
         sbdr.AppendLine("/**".PadIndented(indent));
         sbdr.AppendLine(" * @author ".PadIndented(indent));
-        var documentComment = classNode.GetLeadingTrivia().FirstOrDefault(SyntaxExtensions.IsSingleLineDocumentationComment).ToString();
-        sbdr.AppendLine($" * @Description: {AnalysisToComment(documentComment).Replace("* ", "").Trim()}".PadIndented(indent));
+        sbdr.AppendLine($" * @Description: {AnalysisToComment(commentNode.ToFullString(), indent).Trim().TrimStart('*')}".PadIndented(indent));
         sbdr.AppendLine($" * @date: {DateTime.Now:yyyy-MM-dd}".PadIndented(indent));
         sbdr.AppendLine(" */".PadIndented(indent));
         return sbdr.ToString();
     }
 
-    public static string GenerateDeclareCommennt(SyntaxNode syntaxNode, int indent = 0)
+    public static string GenerateDeclareCommennt(SyntaxTrivia commentNode, int indent = 0)
     {
-        if (syntaxNode == null || !syntaxNode.HasLeadingTrivia)
-        {
-            return string.Empty;
-        }
-        var syntaxTriviaList = syntaxNode.GetLeadingTrivia();
-        if (!syntaxTriviaList.Any(SyntaxExtensions.IsSingleLineDocumentationComment))
-        {
-            return string.Empty;
-        }
-
         var sbdr = new StringBuilder(1000);
         sbdr.AppendLine("/**".PadIndented(indent));
-        sbdr.AppendLine(AnalysisToComment(syntaxTriviaList.FirstOrDefault(SyntaxExtensions.IsSingleLineDocumentationComment).ToString(), indent));
+        sbdr.AppendLine(AnalysisToComment(commentNode.ToFullString(), indent).PadIndented(indent));
+        sbdr.AppendLine(" */".PadIndented(indent));
+        return sbdr.ToString();
+    }
+
+
+    public static string GenerateDeclareCommennt(SyntaxTriviaList commentNode, int indent = 0)
+    {
+        var sbdr = new StringBuilder(1000);
+        sbdr.AppendLine("/**".PadIndented(indent));
+        sbdr.AppendLine(AnalysisToComment(commentNode.ToFullString(), indent).PadIndented(indent));
         sbdr.AppendLine(" */".PadIndented(indent));
         return sbdr.ToString();
     }
@@ -72,11 +66,11 @@ public class ConvertComment
 
     public static string GenerateBeforeComment(CSharpSyntaxNode syntaxNode, int indent = 0)
     {
-        return string.Join("\n", syntaxNode.GetLeadingTrivia().Where(SyntaxExtensions.IsCommentTrivia).Select(item => item.ToString().PadIndented(indent)));
+        return string.Join("\n", syntaxNode.GetLeadingTrivia().Where(SyntaxExtensions.IsComment).Select(item => item.ToString().PadIndented(indent)));
     }
 
     public static string GenerateAfterComment(CSharpSyntaxNode syntaxNode, int indent = 0)
     {
-        return string.Join("\n", syntaxNode.GetTrailingTrivia().Where(SyntaxExtensions.IsCommentTrivia).Select(item => item.ToString().PadIndented(indent)));
+        return string.Join("\n", syntaxNode.GetTrailingTrivia().Where(SyntaxExtensions.IsComment).Select(item => item.ToString().PadIndented(indent)));
     }
 }

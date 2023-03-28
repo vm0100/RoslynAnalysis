@@ -16,7 +16,7 @@ public class ConvertField
     {
         fieldNode = new FieldRewriter().Visit(fieldNode) as FieldDeclarationSyntax;
 
-        var comment = ConvertComment.GenerateDeclareCommennt(fieldNode, indent);
+        var comment = ConvertComment.GenerateDeclareCommennt(fieldNode.GetTrailingTrivia(), indent);
         var attribute = string.Join("\n", fieldNode.AttributeLists.SelectMany(attrList => attrList.Attributes.Select(attr => "@" + attr.Name.ToString() + (attr.ArgumentList == null || attr.ArgumentList.Arguments.Count < 1 ? "" : "(" + string.Join(", ", attr.ArgumentList.Arguments.Select(arg => ConvertInvoke.GenerateCode(arg.Expression))) + ")"))));
         if (attribute.IsNotNullOrWhiteSpace())
         {

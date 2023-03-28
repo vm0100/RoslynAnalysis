@@ -31,7 +31,12 @@ public static class SyntaxExtensions
 
     public static bool IsKinds(this SyntaxNode exp, params SyntaxKind[] kinds) => kinds.Any(k => exp.IsKind(k));
 
-    public static bool IsCommentTrivia(this SyntaxTrivia syntax) => syntax.IsKind(SyntaxKind.SingleLineCommentTrivia) || syntax.IsKind(SyntaxKind.MultiLineCommentTrivia);
+    public static bool IsDocumentationComment(this SyntaxTrivia trivia)
+    {
+        return trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
+    }
+
+    public static bool IsComment(this SyntaxTrivia syntax) => syntax.IsKind(SyntaxKind.SingleLineCommentTrivia) || syntax.IsKind(SyntaxKind.MultiLineCommentTrivia);
 
     public static bool Iskind(this TypeSyntax type, SyntaxKind kind) => type.RawKind == (int)kind;
 }

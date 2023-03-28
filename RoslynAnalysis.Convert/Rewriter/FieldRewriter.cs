@@ -3,10 +3,27 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
+using RoslynAnalysis.Convert.ToJava;
+
 namespace RoslynAnalysis.Convert.Rewriter
 {
     public class FieldRewriter : CSharpSyntaxRewriter
     {
+
+        public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+        {
+            if (trivia.IsDocumentationComment())
+            {
+                trivia = SyntaxFactory.Trivia(
+                            SyntaxFactory.DocumentationCommentTrivia(
+                                SyntaxKind.MultiLineDocumentationCommentTrivia,
+                                SyntaxFactory.SingletonList<XmlNodeSyntax>(
+                                    SyntaxFactory.XmlText(ConvertComment.GenerateDeclareCommennt(trivia)))));
+            }
+
+            return base.VisitTrivia(trivia);
+        }
+
         public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
             node = VisitVarDefine(node);
