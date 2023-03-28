@@ -9,7 +9,7 @@ using RoslynAnalysis.Convert.Rewriter;
 
 namespace RoslynAnalysis.Convert.Test
 {
-    public class AnalysisClassTest
+    public class ClassRewriterTest
     {
         [Fact(DisplayName = "类注释转换测试")]
         public void VisitCommentTest()

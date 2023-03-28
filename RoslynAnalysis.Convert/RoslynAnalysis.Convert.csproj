@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-  </PropertyGroup>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\RoslynAnalysis.Core\RoslynAnalysis.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\RoslynAnalysis.Core\RoslynAnalysis.Core.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Microsoft.CodeAnalysis" />
-    <Using Include="Microsoft.CodeAnalysis.CSharp" />
-    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
-    <Using Include="RoslynAnalysis.Core" />
-  </ItemGroup>
+	<ItemGroup>
+		<Using Include="Microsoft.CodeAnalysis" />
+		<Using Include="Microsoft.CodeAnalysis.CSharp" />
+		<Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
+		<Using Include="RoslynAnalysis.Core" />
+	</ItemGroup>
 
 </Project>

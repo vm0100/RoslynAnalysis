@@ -25,7 +25,14 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
             }
         }
 
+        node = node.WithType(new TypeRewriter().Visit(node.Type) as TypeSyntax);
+
         return base.VisitObjectCreationExpression(node);
+    }
+
+    public override SyntaxNode VisitGenericName(GenericNameSyntax node)
+    {
+        return new TypeRewriter().Visit(node);
     }
 
 
@@ -37,10 +44,13 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
             SyntaxFactory.IdentifierName("Lists"),
             SyntaxFactory.IdentifierName("newArrayList"));
 
+        SyntaxToken separator = SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space);
+
         var invocationExp = SyntaxFactory.InvocationExpression(listsNewArrayMember,
                                 SyntaxFactory.ArgumentList(
                                     SyntaxFactory.SeparatedList(
-                                        node.Initializer?.Expressions.Select(SyntaxFactory.Argument))));
+                                        node.Initializer?.Expressions.Select(SyntaxFactory.Argument), 
+                                        Enumerable.Range(0, node.Initializer?.Expressions.Count - 1 ?? 0).Select(i => separator))));
 
         return base.VisitInvocationExpression(invocationExp);
     }
@@ -50,9 +60,7 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
         if (node.Initializer != null || node.Initializer.Expressions.Count > 0)
         {
             var genericType = node.Type as GenericNameSyntax;
-
             node = node.WithType(genericType.WithIdentifier(SyntaxFactory.Identifier("HashMap")));
-
             return base.VisitObjectCreationExpression(node);
         }
 
@@ -64,5 +72,11 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
         var invocationExp = SyntaxFactory.InvocationExpression(dictNewArrayMember, SyntaxFactory.ArgumentList());
 
         return base.VisitInvocationExpression(invocationExp);
+    }
+
+    public override SyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node)
+    {
+        // 如果类型是HashMap，重写为put(xxx)
+        return base.VisitInitializerExpression(node);
     }
 }

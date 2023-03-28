@@ -39,4 +39,5 @@ public static class SyntaxExtensions
     public static bool IsComment(this SyntaxTrivia syntax) => syntax.IsKind(SyntaxKind.SingleLineCommentTrivia) || syntax.IsKind(SyntaxKind.MultiLineCommentTrivia);
 
     public static bool Iskind(this TypeSyntax type, SyntaxKind kind) => type.RawKind == (int)kind;
+
 }

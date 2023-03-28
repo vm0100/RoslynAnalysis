@@ -65,7 +65,6 @@ public class ClassRewriter : CSharpSyntaxRewriter
 
     public ClassDeclarationSyntax VisitAttribute(ClassDeclarationSyntax node)
     {
-        var className = node.Identifier.ValueText;
         var annotationList = node.AttributeLists.ToManyList(a => a.Attributes) ?? new List<AttributeSyntax>();
 
         annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "Serializable");
@@ -99,8 +98,6 @@ public class ClassRewriter : CSharpSyntaxRewriter
     {
         var classDeclaration = node.Parent as ClassDeclarationSyntax;
 
-        var className = classDeclaration.Identifier.ValueText;
-        var attrList = classDeclaration.AttributeLists.ToManyList(attr => attr.Attributes) ?? new List<AttributeSyntax>();
         var baseTypeList = node?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
 
         if (isEntity)

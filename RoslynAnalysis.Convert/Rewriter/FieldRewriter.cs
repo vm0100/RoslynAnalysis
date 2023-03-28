@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 
 using RoslynAnalysis.Convert.ToJava;
@@ -9,6 +10,8 @@ namespace RoslynAnalysis.Convert.Rewriter
 {
     public class FieldRewriter : CSharpSyntaxRewriter
     {
+        private bool isRepository = false;
+        private bool isLazyService = false;
 
         public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
         {
@@ -26,21 +29,22 @@ namespace RoslynAnalysis.Convert.Rewriter
 
         public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
-            node = VisitVarDefine(node);
-            node = VisitLazyService(node);
-            node = VisitRepository(node);
-            node = VisitType(node);
+            var newNode = VisitVarDefine(node);
+            newNode = VisitLazyService(newNode);
+            newNode = VisitRepository(newNode);
+            newNode = VisitType(newNode);
 
-            return base.VisitFieldDeclaration(node);
+            if (isLazyService || isRepository)
+            {
+                newNode = VisitLazyServiceModifiers(newNode);
+
+                newNode = newNode.AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Resource")))));
+            }
+
+            newNode = VisitAttribute(newNode);
+
+            return base.VisitFieldDeclaration(newNode);
         }
-
-        public override SyntaxNode VisitAttributeList(AttributeListSyntax node)
-        {
-            //_declaration = _declaration.AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Resource")))));
-
-            return base.VisitAttributeList(node);
-        }
-
 
         /// <summary>
         /// 替换LazyService和Lazy定义
@@ -56,9 +60,9 @@ namespace RoslynAnalysis.Convert.Rewriter
             }
 
             var genericTypeSyntax = (GenericNameSyntax)typeSyntax;
-            var isLazy = genericTypeSyntax.Identifier.ValueText.In("LazyService", "Lazy");
+            isLazyService = genericTypeSyntax.Identifier.ValueText.In("LazyService", "Lazy");
 
-            if (isLazy == false)
+            if (isLazyService == false)
             {
                 return node;
             }
@@ -66,34 +70,7 @@ namespace RoslynAnalysis.Convert.Rewriter
             typeSyntax = (genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax).WithTrailingTrivia(typeSyntax.GetTrailingTrivia());
             fieldDeclaration = fieldDeclaration.WithType(typeSyntax);
 
-            // 将服务初始化语句移除
-            var variables = fieldDeclaration.Variables;
-            var newVariables = variables;
-            foreach (var variable in variables)
-            {
-                var variableRewriter = variable;
-                if (variableRewriter.Initializer == null)
-                {
-                    continue;
-                }
-
-                // 只处理new的数据
-                if (!variableRewriter.Initializer.Value.IsKind(SyntaxKind.ObjectCreationExpression))
-                {
-                    continue;
-                }
-
-                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
-                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter.WithInitializer(null));
-            }
-
-            fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
-
-            node = node.ReplaceNode(node.Declaration, fieldDeclaration);
-
-            node = VisitLazyServiceModifiers(node);
-
-            return node;
+            return node.WithDeclaration(fieldDeclaration);
         }
 
         public FieldDeclarationSyntax VisitRepository(FieldDeclarationSyntax node)
@@ -108,60 +85,29 @@ namespace RoslynAnalysis.Convert.Rewriter
 
             // 替换定义
             var genericTypeSyntax = (GenericNameSyntax)typeSyntax;
-            if (genericTypeSyntax.Identifier.ValueText.NotIn("EntityService", "IRepository"))
+            isRepository = genericTypeSyntax.Identifier.ValueText.In("EntityService", "IRepository");
+            if (isRepository == false)
             {
                 return node;
             }
 
-            typeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
-            fieldDeclaration = fieldDeclaration.WithType(SyntaxFactory.IdentifierName("I" + typeSyntax.ToString() + "Dao"));
-
-            // 更名
-            var variables = fieldDeclaration.Variables;
-            var newVariables = variables;
-            foreach (var variable in variables)
-            {
-                var variableRewriter = variable;
-                //variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(typeSyntax.ToString().ToLowerTitleCase() + "Dao"));
-                variableRewriter = variable.WithIdentifier(SyntaxFactory.Identifier(variable.Identifier.ValueText.TrimStart('_')));
-
-                newVariables = fieldDeclaration.Variables.Replace(variable, variableRewriter);
-            }
-
-            fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
-
-            node = node.WithDeclaration(fieldDeclaration);
-
-            return node;
+            var newTypeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
+            fieldDeclaration = fieldDeclaration.WithType(SyntaxFactory.IdentifierName("I" + newTypeSyntax.ToString() + "Dao").WithTrailingTrivia(typeSyntax.GetTrailingTrivia()));
+            return node.WithDeclaration(fieldDeclaration);
         }
 
         public FieldDeclarationSyntax VisitLazyServiceModifiers(FieldDeclarationSyntax node)
         {
             var modifiers = SyntaxFactory.TokenList(node.Modifiers.Where(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
-            node = node.WithModifiers(modifiers);
-
-            return node;
+            return node.WithModifiers(modifiers).WithLeadingTrivia(node.GetLeadingTrivia());
         }
 
         public FieldDeclarationSyntax VisitType(FieldDeclarationSyntax node)
         {
-            var type = node.Declaration.Type;
+            var declaration = node.Declaration;
 
-            if (type.IsKind(SyntaxKind.GenericName) == false)
-            {
-                var newType = new TypeRewriter().Visit(type) as TypeSyntax;
-                node = node.WithDeclaration(node.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
-                return node;
-            }
-
-            var genericNameText = (type as GenericNameSyntax).Identifier.ValueText;
-            if (genericNameText == "Dictionary" || genericNameText == "IDictionary")
-            {
-                node = node.WithDeclaration(node.Declaration.WithType(SyntaxFactory.IdentifierName("Map")).WithTrailingTrivia(type.GetTrailingTrivia()));
-                return node;
-            }
-
-            return node;
+            var newType = new TypeRewriter().Visit(declaration.Type) as TypeSyntax;
+            return node.WithDeclaration(declaration.WithType(newType)).WithLeadingTrivia(node.GetLeadingTrivia());
         }
 
         public FieldDeclarationSyntax VisitVarDefine(FieldDeclarationSyntax node)
@@ -188,5 +134,73 @@ namespace RoslynAnalysis.Convert.Rewriter
 
             return node;
         }
+
+
+        public FieldDeclarationSyntax VisitAttribute(FieldDeclarationSyntax node)
+        {
+            var annotationList = node.AttributeLists.ToManyList(a => a.Attributes) ?? new List<AttributeSyntax>();
+
+            var attributeList = SyntaxFactory.List(annotationList.Select(annotation => SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(annotation))
+                                                                                                    .WithTrailingTrivia(SyntaxFactory.EndOfLine("\r\n"))));
+
+            node = node.WithAttributeLists(attributeList).WithLeadingTrivia(node.GetLeadingTrivia());
+            return node;
+        }
+
+        public override SyntaxNode VisitAttribute(AttributeSyntax node)
+        {
+            node = node.WithName(SyntaxFactory.IdentifierName("@" + (node.Name as IdentifierNameSyntax).Identifier.ValueText.TrimStart('@')));
+            return base.VisitAttribute(node);
+        }
+
+        public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
+        {
+            if (isLazyService || isRepository)
+            {
+                node = node.WithInitializer(null).WithTrailingTrivia();
+            }
+
+            return base.VisitVariableDeclarator(node);
+        }
+
+        public override SyntaxNode VisitArrayType(ArrayTypeSyntax node)
+        {
+            return new TypeRewriter().Visit(node);
+        }
+
+        public override SyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node)
+        {
+            if (node.Parent != null
+                    && node.Parent.Parent != null
+                    && node.Parent.Parent is VariableDeclarationSyntax variable
+                    && variable.Type is IdentifierNameSyntax identifierName
+                    && identifierName.Identifier.ValueText == "BigDecimal")
+            {
+                var invocationExp = SyntaxFactory.InvocationExpression(
+                                        SyntaxFactory.MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            SyntaxFactory.IdentifierName(identifierName.Identifier.ValueText),
+                                            SyntaxFactory.IdentifierName("valueOf")));
+                invocationExp = invocationExp.WithArgumentList(
+                                                SyntaxFactory.ArgumentList(
+                                                    SyntaxFactory.SingletonSeparatedList(
+                                                        SyntaxFactory.Argument(node.Value))));
+
+                node = node.WithValue(invocationExp);
+            }
+
+            if (node.Value.IsKind(SyntaxKind.ObjectCreationExpression))
+            {
+                node = node.WithValue(new ObjectCreationRewriter().Visit(node.Value) as ExpressionSyntax);
+            }
+
+            if (node.Value.IsKind(SyntaxKind.ArrayCreationExpression))
+            {
+                node = node.WithValue(new ObjectCreationRewriter().Visit(node.Value) as ExpressionSyntax);
+            }
+
+            return base.VisitEqualsValueClause(node);
+        }
+
     }
 }

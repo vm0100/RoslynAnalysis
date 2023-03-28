@@ -22,8 +22,7 @@ public class ConvertCommon
         "short" or "short?" => "Short",
         "Guid" or "Guid?" => "UUID",
         "string" or "String" => "String",
-        "Dictionary" => "HashMap",
-        "IDictionary" => "Map",
+        "Dictionary" or "IDictionary" => "Map",
         "List" or "Array" => "List",
         "ArgumentNullException" => "IllegalArgumentException",
         "BusinessUnitDomainService" => "DomainService",
@@ -118,7 +117,7 @@ public class ConvertCommon
         {
             return propertyType[..(propertyType.Length - 6)] + "Entity";
         }
-        return propertyType + "Entity";
+        return propertyType;
     }
 
     public static string GenerateImportPackage()
