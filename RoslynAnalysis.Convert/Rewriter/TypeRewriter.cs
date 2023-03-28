@@ -4,7 +4,7 @@ using System.Text;
 
 using RoslynAnalysis.Convert.ToJava;
 
-namespace RoslynAnalysis.Convert.AnalysisToJava;
+namespace RoslynAnalysis.Convert.Rewriter;
 
 public class TypeRewriter : CSharpSyntaxRewriter
 {

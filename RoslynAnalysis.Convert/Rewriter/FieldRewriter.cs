@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
-namespace RoslynAnalysis.Convert.AnalysisToJava
+namespace RoslynAnalysis.Convert.Rewriter
 {
     public class FieldRewriter : CSharpSyntaxRewriter
     {

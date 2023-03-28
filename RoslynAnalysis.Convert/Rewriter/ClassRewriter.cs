@@ -6,14 +6,31 @@ using System.Xml.Linq;
 
 using RoslynAnalysis.Convert.ToJava;
 
-namespace RoslynAnalysis.Convert.AnalysisToJava;
+namespace RoslynAnalysis.Convert.Rewriter;
 
 public class ClassRewriter : CSharpSyntaxRewriter
 {
-    [return: NotNullIfNotNull("node")]
-    public override SyntaxNode Visit(SyntaxNode node)
+    public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
-        return base.Visit(node);
+        var className = node.Identifier.ValueText;
+        var attrList = node.AttributeLists.ToManyList(attr => attr.Attributes);
+        var baseTypeList = node.BaseList?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
+
+        if (IsEntity(className, attrList, baseTypeList))
+        {
+            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Entity") ? className : className + "Entity"));
+
+            return base.VisitClassDeclaration(node);
+        }
+
+        if (IsDto(className, attrList, baseTypeList))
+        {
+            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Dto") ? className : className + "DTO"));
+
+            return base.VisitClassDeclaration(node);
+        }
+
+        return base.VisitClassDeclaration(node);
     }
 
     public override SyntaxNode VisitDocumentationCommentTrivia(DocumentationCommentTriviaSyntax node)
@@ -98,28 +115,6 @@ public class ClassRewriter : CSharpSyntaxRewriter
     //    return this;
     //}
 
-    public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
-    {
-        var className = node.Identifier.ValueText;
-        var attrList = node.AttributeLists.ToManyList(attr => attr.Attributes);
-        var baseTypeList = node.BaseList?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
-
-        if (IsEntity(className, attrList, baseTypeList))
-        {
-            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Entity") ? className : className + "Entity"));
-
-            return base.VisitClassDeclaration(node);
-        }
-
-        if (IsDto(className, attrList, baseTypeList))
-        {
-            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Dto") ? className : className + "DTO"));
-
-            return base.VisitClassDeclaration(node);
-        }
-
-        return base.VisitClassDeclaration(node);
-    }
 
     public override SyntaxNode VisitBaseList(BaseListSyntax node)
     {

@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using RoslynAnalysis.Convert.AnalysisToJava;
+using RoslynAnalysis.Convert.Rewriter;
 
 namespace RoslynAnalysis.Convert.Test
 {

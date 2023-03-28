@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-using RoslynAnalysis.Convert.AnalysisToJava;
+using RoslynAnalysis.Convert.Rewriter;
 
 namespace RoslynAnalysis.Convert.ToJava;
 
