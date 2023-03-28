@@ -6,12 +6,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using RoslynAnalysis.Convert.AnalysisToJava;
+
 namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertMethod
 {
     public static string GenerateCode(MethodDeclarationSyntax methodNode, int indent = 0)
     {
+        methodNode = FunctionRewriter.Build(methodNode).Rewriter();
+
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(methodNode, indent));
         var modifier = string.Join(" ", methodNode.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
@@ -31,6 +35,8 @@ public class ConvertMethod
 
     public static string GenerateCode(LocalFunctionStatementSyntax localFunction, int indent = 0)
     {
+        localFunction = LocalFunctionRewriter.Build(localFunction).Rewriter();
+
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(localFunction, indent));
         var modifier = string.Join(" ", localFunction.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
