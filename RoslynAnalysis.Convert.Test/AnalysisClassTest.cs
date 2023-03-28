@@ -29,7 +29,7 @@ public class ConvertArgument{}";
 public class ConvertArgument{{}}";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = ClassRewriter.Build(memberSyntax as TypeDeclarationSyntax).VisitComment().Rewriter();
+            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
@@ -52,7 +52,7 @@ public class ConvertArgument{}";
 public class ConvertArgument{{}}";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = ClassRewriter.Build(memberSyntax as TypeDeclarationSyntax).VisitAnnotation().Rewriter();
+            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = "\r\n" + memberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
@@ -62,7 +62,7 @@ public class ConvertArgument{{}}";
         public void VisitDefinedNameTest(string source, string expect)
         {
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(source);
-            memberSyntax = ClassRewriter.Build(memberSyntax as TypeDeclarationSyntax).VisitDefinedName().Rewriter();
+            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = "\r\n" + memberSyntax.ToFullString();
             Assert.Equal(expect, actual);
         }

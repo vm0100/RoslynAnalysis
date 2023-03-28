@@ -18,7 +18,7 @@ namespace RoslynAnalysis.Convert.Test
         public void RewriterListTest(string code, string expected)
         {
             var memberSyntax = SyntaxFactory.ParseStatement(code) as ExpressionStatementSyntax;
-            var newMemberSyntax = ObjectCreationRewriter.Build(memberSyntax.Expression as ObjectCreationExpressionSyntax).Rewriter();
+            var newMemberSyntax = new ObjectCreationRewriter().Visit(memberSyntax.Expression);
             var actual = newMemberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
@@ -31,7 +31,7 @@ namespace RoslynAnalysis.Convert.Test
             var expected = "new HashMap()";
 
             var memberSyntax = SyntaxFactory.ParseStatement(code) as ExpressionStatementSyntax;
-            var newMemberSyntax = ObjectCreationRewriter.Build(memberSyntax.Expression as ObjectCreationExpressionSyntax).Rewriter();
+            var newMemberSyntax = new ObjectCreationRewriter().Visit(memberSyntax.Expression as ObjectCreationExpressionSyntax);
             var actual = newMemberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }

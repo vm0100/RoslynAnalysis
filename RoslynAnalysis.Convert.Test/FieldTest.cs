@@ -21,7 +21,7 @@ var i = new List<string>;";
 Integer i = 0";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = FieldRewriter.Build(memberSyntax as FieldDeclarationSyntax).VisitVarDefine().Rewriter();
+            memberSyntax = new FieldRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expected.Trim(), actual);
         }

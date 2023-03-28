@@ -25,7 +25,7 @@ public class ConvertJava : IAnalysisConvert
 
         foreach (var member in namespaceDeclaration.Members)
         {
-            namespaceDeclaration.ReplaceNode(member, ClassRewriter.Build(member as TypeDeclarationSyntax).Rewriter());
+            namespaceDeclaration.ReplaceNode(member, new ClassRewriter().Visit(member));
         }
 
         return namespaceDeclaration;

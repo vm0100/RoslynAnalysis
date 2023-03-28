@@ -72,7 +72,7 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateObjectCreation(ObjectCreationExpressionSyntax exp)
     {
-        var rewriterExp = ObjectCreationRewriter.Build(exp).Rewriter();
+        var rewriterExp = new ObjectCreationRewriter().Visit(exp) as ExpressionSyntax;
         if (rewriterExp.IsKind(SyntaxKind.ObjectCreationExpression) == false)
         {
             return GenerateCode(rewriterExp);

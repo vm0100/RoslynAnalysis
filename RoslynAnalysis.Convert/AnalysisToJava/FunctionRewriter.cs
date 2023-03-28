@@ -4,27 +4,10 @@ using System.Text;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava;
 
-public class FunctionRewriter : RewriterBase<MethodDeclarationSyntax>
+public class FunctionRewriter : CSharpSyntaxRewriter
 {
-    private BlockSyntax _blockSyntax;
-
-    public FunctionRewriter(MethodDeclarationSyntax methodNode) : base(methodNode)
+    public override SyntaxNode VisitBlock(BlockSyntax node)
     {
-        _blockSyntax = methodNode.Body;
-    }
-
-    public static FunctionRewriter Build(MethodDeclarationSyntax methodNode) => new FunctionRewriter(methodNode);
-
-    public override MethodDeclarationSyntax Rewriter()
-    {
-        if (_blockSyntax != null)
-        {
-            _declaration = _declaration.WithBody(FunctionBodyRewriter.Build(_blockSyntax).Rewriter());
-        }
-
-        // 表达式主体函数
-        // _declaration.WithExpressionBody
-
-        return base.Rewriter();
+        return base.Visit(new FunctionBodyRewriter().Visit(node));
     }
 }

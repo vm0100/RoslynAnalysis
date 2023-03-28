@@ -1,140 +1,142 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava;
 
-public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
+public class ClassRewriter : CSharpSyntaxRewriter
 {
-    private SyntaxTriviaList _leadingTrivia;
-
-    public ClassRewriter(TypeDeclarationSyntax typeDeclaration) : base(typeDeclaration)
+    [return: NotNullIfNotNull("node")]
+    public override SyntaxNode Visit(SyntaxNode node)
     {
-        _leadingTrivia = typeDeclaration.GetLeadingTrivia();
-
-        _declaration = _declaration.WithLeadingTrivia(SyntaxFactory.Space);
+        return base.Visit(node);
     }
 
-    public static ClassRewriter Build(TypeDeclarationSyntax typeDeclaration) => new ClassRewriter(typeDeclaration);
-
-    public override TypeDeclarationSyntax Rewriter()
+    public override SyntaxNode VisitDocumentationCommentTrivia(DocumentationCommentTriviaSyntax node)
     {
-        VisitComment().VisitAnnotation().VisitDefinedName().VisitExtendBase();
+        //SyntaxFactory.TriviaList(
+        //    SyntaxFactory.Trivia(
+        //        SyntaxFactory.DocumentationCommentTrivia(
+        //            SyntaxKind.MultiLineDocumentationCommentTrivia,
+        //            SyntaxFactory.SingletonList<XmlNodeSyntax>(
+        //                SyntaxFactory.XmlText(ConvertComment.GenerateTypeDeclareComment(_declaration))))))
 
-        _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
-        return base.Rewriter();
+        return base.VisitDocumentationCommentTrivia(node);
     }
 
-    public ClassRewriter VisitComment()
+    public override SyntaxNode VisitXmlComment(XmlCommentSyntax node)
     {
-        if (_declaration.HasLeadingTrivia == false)
+        if (node.Parent?.IsKind(SyntaxKind.ClassDeclaration) == true)
         {
-            return this;
+            
         }
-
-        _leadingTrivia = SyntaxFactory.TriviaList(
-            SyntaxFactory.Trivia(
-                SyntaxFactory.DocumentationCommentTrivia(
-                    SyntaxKind.MultiLineDocumentationCommentTrivia,
-                    SyntaxFactory.SingletonList<XmlNodeSyntax>(
-                        SyntaxFactory.XmlText(ConvertComment.GenerateTypeDeclareComment(_declaration))))));
-        return this;
+        return base.VisitXmlComment(node);
     }
 
-    public ClassRewriter VisitAnnotation()
+    public override SyntaxNode VisitAttribute(AttributeSyntax node)
     {
-        var className = _declaration.Identifier.ValueText;
-        var annotationList = _declaration.AttributeLists.ToManyList(a => a.Attributes) ?? new List<AttributeSyntax>();
-        var baseTypeList = _declaration.BaseList?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
-        var isEntity = IsEntity(className, annotationList, baseTypeList);
-        var isDto = IsDto(className, annotationList, baseTypeList);
-        var isService = IsService(className, annotationList, baseTypeList);
-        annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "Serializable");
-        if (isEntity)
-        {
-            annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Data")));
-        }
-        else if (isDto)
-        {
-            annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "DtoDescription");
-            annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Data")));
-        }
-        else if (isService)
-        {
-            annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Service")));
-            annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Log4j")));
-        }
-
-        // 更名
-        for (int i = 0; i < annotationList.Count; i++)
-        {
-            var attrSyntax = annotationList[i];
-            var attrName = ((IdentifierNameSyntax)attrSyntax.Name).Identifier.ValueText;
-            var newAttrName = attrName switch
-            {
-                "EntityName" => "@TableName",
-                _ => "@" + attrName
-            };
-
-            if (attrName == newAttrName)
-            {
-                continue;
-            }
-
-            var newAttrSyntax = attrSyntax.WithName(SyntaxFactory.IdentifierName(newAttrName));
-            annotationList[i] = newAttrSyntax;
-        }
-
-        // 转换成[attr1]\n[attr2]\n[attr3]
-        var annotationListSyntax = SyntaxFactory.List(annotationList.Select(annotation =>
-        {
-            var attrList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(annotation));
-            return attrList.WithTrailingTrivia(SyntaxFactory.EndOfLine("\r\n"));
-        }));
-
-        _declaration = _declaration.WithAttributeLists(annotationListSyntax);
-        return this;
+        node = node.WithName(SyntaxFactory.IdentifierName((node.Name as IdentifierNameSyntax).Identifier.ValueText.TrimStart('@')));
+        return base.VisitAttribute(node);
     }
 
-    public ClassRewriter VisitDefinedName()
+    //public ClassRewriter VisitAnnotation()
+    //{
+    //    var className = _declaration.Identifier.ValueText;
+    //    var annotationList = _declaration.AttributeLists.ToManyList(a => a.Attributes) ?? new List<AttributeSyntax>();
+    //    var baseTypeList = _declaration.BaseList?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
+    //    var isEntity = IsEntity(className, annotationList, baseTypeList);
+    //    var isDto = IsDto(className, annotationList, baseTypeList);
+    //    var isService = IsService(className, annotationList, baseTypeList);
+    //    annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "Serializable");
+    //    if (isEntity)
+    //    {
+    //        annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Data")));
+    //    }
+    //    else if (isDto)
+    //    {
+    //        annotationList.RemoveAll(attr => ((IdentifierNameSyntax)attr.Name).Identifier.ValueText == "DtoDescription");
+    //        annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Data")));
+    //    }
+    //    else if (isService)
+    //    {
+    //        annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Service")));
+    //        annotationList.Add(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Log4j")));
+    //    }
+
+    //    // 更名
+    //    for (int i = 0; i < annotationList.Count; i++)
+    //    {
+    //        var attrSyntax = annotationList[i];
+    //        var attrName = ((IdentifierNameSyntax)attrSyntax.Name).Identifier.ValueText;
+    //        var newAttrName = attrName switch
+    //        {
+    //            "EntityName" => "@TableName",
+    //            _ => "@" + attrName
+    //        };
+
+    //        if (attrName == newAttrName)
+    //        {
+    //            continue;
+    //        }
+
+    //        var newAttrSyntax = attrSyntax.WithName(SyntaxFactory.IdentifierName(newAttrName));
+    //        annotationList[i] = newAttrSyntax;
+    //    }
+
+    //    // 转换成[attr1]\n[attr2]\n[attr3]
+    //    var annotationListSyntax = SyntaxFactory.List(annotationList.Select(annotation =>
+    //    {
+    //        var attrList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(annotation));
+    //        return attrList.WithTrailingTrivia(SyntaxFactory.EndOfLine("\r\n"));
+    //    }));
+
+    //    _declaration = _declaration.WithAttributeLists(annotationListSyntax);
+    //    return this;
+    //}
+
+    public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
-        var className = _declaration.Identifier.ValueText;
-        var attrList = _declaration.AttributeLists.ToManyList(attr => attr.Attributes);
-        var baseTypeList = _declaration.BaseList.Types.ToList(t => t.Type.ToString());
+        var className = node.Identifier.ValueText;
+        var attrList = node.AttributeLists.ToManyList(attr => attr.Attributes);
+        var baseTypeList = node.BaseList?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
 
         if (IsEntity(className, attrList, baseTypeList))
         {
-            _declaration = _declaration.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Entity") ? className : className + "Entity"));
-            return this;
+            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Entity") ? className : className + "Entity"));
+
+            return base.VisitClassDeclaration(node);
         }
 
         if (IsDto(className, attrList, baseTypeList))
         {
-            _declaration = _declaration.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Dto") ? className : className + "DTO"));
+            node = node.WithIdentifier(SyntaxFactory.Identifier(className.InEndsWithIgnoreCase("Dto") ? className : className + "DTO"));
 
-            return this;
+            return base.VisitClassDeclaration(node);
         }
 
-        return this;
+        return base.VisitClassDeclaration(node);
     }
 
-    public ClassRewriter VisitExtendBase()
+    public override SyntaxNode VisitBaseList(BaseListSyntax node)
     {
-        var className = _declaration.Identifier.ValueText;
-        var attrList = _declaration.AttributeLists.ToManyList(attr => attr.Attributes);
+        var classDeclaration = node.Parent as ClassDeclarationSyntax;
 
-        var baseTypeList = _declaration.BaseList.Types.ToList(t => t.Type.ToString());
+        var className = classDeclaration.Identifier.ValueText;
+        var attrList = classDeclaration.AttributeLists.ToManyList(attr => attr.Attributes) ?? new List<AttributeSyntax>();
+        var baseTypeList = node?.Types.ToList(t => t.Type.ToString()) ?? new List<string>();
 
         if (IsEntity(className, attrList, baseTypeList))
         {
             if (baseTypeList.Contains("Entity") == false)
             {
-                return this;
+                return base.VisitBaseList(node);
             }
             var baseTypeSyntaxList = SyntaxFactory.SeparatedList<BaseTypeSyntax>();
-            foreach (var baseType in _declaration.BaseList.Types)
+            foreach (var baseType in node.Types)
             {
                 if (baseType.Type.ToString() == "Entity")
                 {
@@ -144,18 +146,17 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
                 baseTypeSyntaxList = baseTypeSyntaxList.Add(baseType);
             }
 
-            _declaration = _declaration.WithBaseList(_declaration.BaseList.WithTypes(baseTypeSyntaxList));
-            return this;
+            return base.VisitBaseList(node.WithTypes(baseTypeSyntaxList));
         }
 
         if (IsDto(className, attrList, baseTypeList))
         {
             if (baseTypeList.Contains("DtoBase") == false && baseTypeList.Contains("BaseDto") == false)
             {
-                return this;
+                return base.VisitBaseList(node);
             }
             var baseTypeSyntaxList = SyntaxFactory.SeparatedList<BaseTypeSyntax>();
-            foreach (var baseType in _declaration.BaseList.Types)
+            foreach (var baseType in node.Types)
             {
                 if (baseType.Type.ToString().In("BaseDto", "DtoBase"))
                 {
@@ -165,11 +166,10 @@ public class ClassRewriter : RewriterBase<TypeDeclarationSyntax>
                 baseTypeSyntaxList = baseTypeSyntaxList.Add(baseType);
             }
 
-            _declaration = _declaration.WithBaseList(_declaration.BaseList.WithTypes(baseTypeSyntaxList));
-            return this;
+            return base.VisitBaseList(node.WithTypes(baseTypeSyntaxList));
         }
 
-        return this;
+        return base.VisitBaseList(node);
     }
 
     private static bool IsEntity(string className, List<AttributeSyntax> attrList, List<string> baseTypes)

@@ -1,28 +1,15 @@
-switch (propertyType)
-            {
-                case "Lists":
-                    return "Lists";
+public class DomainService
+{
+	/// <summary>
+    /// 获取项目下的预约单
+    /// </summary>
+    /// <param name="projIds">项目GUID</param>
+    /// <returns></returns>
+    public virtual List<Model.Booking> GetBookingsByProjIds(List<Guid> projIds)
+    {
+        var obj = new Booking();
+        obj.BookName = "";
 
-                case "Maps":
-                    return "Maps";
-                // 实体工厂
-                case "EntityFactory":
-                    return "BaseSlxtEntity";
-                // Guid生成器
-                case "GuidHelper":
-                    return "GuidGenerator";
-                // DTO基类
-                case "BaseDto":
-                case "DtoBase":
-                    return "DTO";
-                // 实体状态
-                case "EntityState":
-                    return "EntityState";
-
-                default:
-                    if (propertyType.EndsWith("Helper"))
-                    {
-                        return propertyType[..(propertyType.Length - 6)] + "Util";
-                    }
-                    return propertyType;
-            }
+        return _entityService.Instance.Find(p => p.ProjGUID.In(projIds));
+    }
+}

@@ -2,38 +2,34 @@
 using System.Linq;
 using System.Text;
 
+using Microsoft.CodeAnalysis;
+
 namespace RoslynAnalysis.Convert.AnalysisToJava;
 
-public class ObjectCreationRewriter : RewriterBase<ObjectCreationExpressionSyntax>
+public class ObjectCreationRewriter : CSharpSyntaxRewriter
 {
-    public ObjectCreationRewriter(ObjectCreationExpressionSyntax typeDeclaration) : base(typeDeclaration)
+    public override SyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
     {
-    }
-
-    public static ObjectCreationRewriter Build(ObjectCreationExpressionSyntax typeDeclaration) => new ObjectCreationRewriter(typeDeclaration);
-
-    public new ExpressionSyntax Rewriter()
-    {
-        var type = _declaration.Type;
-        if (type.Iskind(SyntaxKind.GenericName))
+        if (node.Type.Iskind(SyntaxKind.GenericName))
         {
-            var genericTypeName = (type as GenericNameSyntax).Identifier.ValueText;
+            var genericTypeName = (node.Type as GenericNameSyntax).Identifier.ValueText;
 
             if (genericTypeName == "List")
             {
-                return RewriterList();
+                return RewriterList(node);
             }
 
             if (genericTypeName == "Dictionary")
             {
-                return RewriterEmptyDictionary();
+                return RewriterEmptyDictionary(node);
             }
         }
 
-        return _declaration;
+        return base.VisitObjectCreationExpression(node);
     }
 
-    public ExpressionSyntax RewriterList()
+
+    public SyntaxNode RewriterList(ObjectCreationExpressionSyntax node)
     {
         // new List<string>() { "", "", ""};转换为 Lists.newArrayList("", "", "");
         var listsNewArrayMember = SyntaxFactory.MemberAccessExpression(
@@ -41,21 +37,23 @@ public class ObjectCreationRewriter : RewriterBase<ObjectCreationExpressionSynta
             SyntaxFactory.IdentifierName("Lists"),
             SyntaxFactory.IdentifierName("newArrayList"));
 
-        return SyntaxFactory.InvocationExpression(listsNewArrayMember,
-            SyntaxFactory.ArgumentList(
-                SyntaxFactory.SeparatedList(
-                    _declaration.Initializer?.Expressions.Select(SyntaxFactory.Argument))));
+        var invocationExp = SyntaxFactory.InvocationExpression(listsNewArrayMember,
+                                SyntaxFactory.ArgumentList(
+                                    SyntaxFactory.SeparatedList(
+                                        node.Initializer?.Expressions.Select(SyntaxFactory.Argument))));
+
+        return base.VisitInvocationExpression(invocationExp);
     }
 
-    public ExpressionSyntax RewriterEmptyDictionary()
+    public SyntaxNode RewriterEmptyDictionary(ObjectCreationExpressionSyntax node)
     {
-        if (_declaration.Initializer != null || _declaration.Initializer.Expressions.Count > 0)
+        if (node.Initializer != null || node.Initializer.Expressions.Count > 0)
         {
-            var genericType = _declaration.Type as GenericNameSyntax;
+            var genericType = node.Type as GenericNameSyntax;
 
-            _declaration = _declaration.WithType(genericType.WithIdentifier(SyntaxFactory.Identifier("HashMap")));
+            node = node.WithType(genericType.WithIdentifier(SyntaxFactory.Identifier("HashMap")));
 
-            return _declaration;
+            return base.VisitObjectCreationExpression(node);
         }
 
         var dictNewArrayMember = SyntaxFactory.MemberAccessExpression(
@@ -63,6 +61,8 @@ public class ObjectCreationRewriter : RewriterBase<ObjectCreationExpressionSynta
             SyntaxFactory.IdentifierName("Maps"),
             SyntaxFactory.IdentifierName("newHashMap"));
 
-        return SyntaxFactory.InvocationExpression(dictNewArrayMember, SyntaxFactory.ArgumentList());
+        var invocationExp = SyntaxFactory.InvocationExpression(dictNewArrayMember, SyntaxFactory.ArgumentList());
+
+        return base.VisitInvocationExpression(invocationExp);
     }
 }

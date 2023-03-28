@@ -216,10 +216,6 @@ public class ConvertCommon
                 return typeName + "." + constantName;
 
             default:
-                if (constantName == "Instance")
-                {
-                    return typeName;
-                }
                 if (typeName == "BaseSlxtEntity" && constantName == "Value")
                 {
                     return typeName;

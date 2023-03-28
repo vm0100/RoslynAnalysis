@@ -16,7 +16,7 @@ public class ConvertProperty
     /// <returns></returns>
     public static string GenerateCode(PropertyDeclarationSyntax propertyNode, int indent = 0)
     {
-        propertyNode = PropertyRewriter.Build(propertyNode).Rewriter();
+        propertyNode = new PropertyRewriter().Visit(propertyNode) as PropertyDeclarationSyntax;
 
         var sbdr = new StringBuilder(propertyNode.Span.End);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(propertyNode, indent));

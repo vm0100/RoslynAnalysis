@@ -10,7 +10,7 @@ public class ConvertMethod
 {
     public static string GenerateCode(MethodDeclarationSyntax methodNode, int indent = 0)
     {
-        methodNode = FunctionRewriter.Build(methodNode).Rewriter();
+        methodNode = new FunctionRewriter().Visit(methodNode) as MethodDeclarationSyntax;
 
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(methodNode, indent));
@@ -31,7 +31,7 @@ public class ConvertMethod
 
     public static string GenerateCode(LocalFunctionStatementSyntax localFunction, int indent = 0)
     {
-        localFunction = LocalFunctionRewriter.Build(localFunction).Rewriter();
+        localFunction = new FunctionRewriter().Visit(localFunction) as LocalFunctionStatementSyntax;
 
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(localFunction, indent));

@@ -1,43 +1,41 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace RoslynAnalysis.Convert.AnalysisToJava
 {
-    public class FieldRewriter : RewriterBase<FieldDeclarationSyntax>
+    public class FieldRewriter : CSharpSyntaxRewriter
     {
-        private SyntaxTriviaList _leadingTrivia;
-
-        public FieldRewriter(FieldDeclarationSyntax declaration) : base(declaration)
+        public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
-            _leadingTrivia = declaration.GetLeadingTrivia();
+            node = VisitVarDefine(node);
+            node = VisitLazyService(node);
+            node = VisitRepository(node);
+            node = VisitType(node);
 
-            // 先清空注释，避免注释混乱
-            _declaration = _declaration.WithLeadingTrivia(SyntaxFactory.Space);
+            return base.VisitFieldDeclaration(node);
         }
 
-        public static FieldRewriter Build(FieldDeclarationSyntax declaration) => new FieldRewriter(declaration);
-
-        public override FieldDeclarationSyntax Rewriter()
+        public override SyntaxNode VisitAttributeList(AttributeListSyntax node)
         {
-            VisitVarDefine().VisitLazyService().VisitRepository().VisitType();
+            //_declaration = _declaration.AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Resource")))));
 
-            // 还原注释
-            _declaration = _declaration.WithLeadingTrivia(_leadingTrivia);
-            return base.Rewriter();
+            return base.VisitAttributeList(node);
         }
+
 
         /// <summary>
         /// 替换LazyService和Lazy定义
         /// </summary>
         /// <returns></returns>
-        public FieldRewriter VisitLazyService()
+        public FieldDeclarationSyntax VisitLazyService(FieldDeclarationSyntax node)
         {
-            var fieldDeclaration = _declaration.Declaration;
+            var fieldDeclaration = node.Declaration;
             var typeSyntax = fieldDeclaration.Type;
             if (typeSyntax.IsKind(SyntaxKind.GenericName) == false)
             {
-                return this;
+                return node;
             }
 
             var genericTypeSyntax = (GenericNameSyntax)typeSyntax;
@@ -45,7 +43,7 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
             if (isLazy == false)
             {
-                return this;
+                return node;
             }
 
             typeSyntax = (genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax).WithTrailingTrivia(typeSyntax.GetTrailingTrivia());
@@ -74,28 +72,28 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
             fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
-            _declaration = _declaration.ReplaceNode(_declaration.Declaration, fieldDeclaration);
+            node = node.ReplaceNode(node.Declaration, fieldDeclaration);
 
-            _declaration = _declaration.AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(SyntaxFactory.IdentifierName("Resource")))));
+            node = VisitLazyServiceModifiers(node);
 
-            return VisitLazyServiceModifiers();
+            return node;
         }
 
-        public FieldRewriter VisitRepository()
+        public FieldDeclarationSyntax VisitRepository(FieldDeclarationSyntax node)
         {
-            var fieldDeclaration = _declaration.Declaration;
+            var fieldDeclaration = node.Declaration;
             var typeSyntax = fieldDeclaration.Type;
 
             if (typeSyntax.IsKind(SyntaxKind.GenericName) == false)
             {
-                return this;
+                return node;
             }
 
             // 替换定义
             var genericTypeSyntax = (GenericNameSyntax)typeSyntax;
             if (genericTypeSyntax.Identifier.ValueText.NotIn("EntityService", "IRepository"))
             {
-                return this;
+                return node;
             }
 
             typeSyntax = genericTypeSyntax.TypeArgumentList.Arguments[0] as TypeSyntax;
@@ -115,47 +113,47 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
 
             fieldDeclaration = fieldDeclaration.WithVariables(newVariables);
 
-            _declaration = _declaration.WithDeclaration(fieldDeclaration);
+            node = node.WithDeclaration(fieldDeclaration);
 
-            return this;
+            return node;
         }
 
-        public FieldRewriter VisitLazyServiceModifiers()
+        public FieldDeclarationSyntax VisitLazyServiceModifiers(FieldDeclarationSyntax node)
         {
-            var modifiers = SyntaxFactory.TokenList(_declaration.Modifiers.Where(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
-            _declaration = _declaration.WithModifiers(modifiers);
+            var modifiers = SyntaxFactory.TokenList(node.Modifiers.Where(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)));
+            node = node.WithModifiers(modifiers);
 
-            return this;
+            return node;
         }
 
-        public FieldRewriter VisitType()
+        public FieldDeclarationSyntax VisitType(FieldDeclarationSyntax node)
         {
-            var type = _declaration.Declaration.Type;
+            var type = node.Declaration.Type;
 
             if (type.IsKind(SyntaxKind.GenericName) == false)
             {
-                var newType = TypeRewriter.Build(type).Rewriter();
-                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
-                return this;
+                var newType = new TypeRewriter().Visit(type) as TypeSyntax;
+                node = node.WithDeclaration(node.Declaration.WithType(newType).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return node;
             }
 
             var genericNameText = (type as GenericNameSyntax).Identifier.ValueText;
             if (genericNameText == "Dictionary" || genericNameText == "IDictionary")
             {
-                _declaration = _declaration.WithDeclaration(_declaration.Declaration.WithType(SyntaxFactory.IdentifierName("Map")).WithTrailingTrivia(type.GetTrailingTrivia()));
-                return this;
+                node = node.WithDeclaration(node.Declaration.WithType(SyntaxFactory.IdentifierName("Map")).WithTrailingTrivia(type.GetTrailingTrivia()));
+                return node;
             }
 
-            return this;
+            return node;
         }
 
-        public FieldRewriter VisitVarDefine()
+        public FieldDeclarationSyntax VisitVarDefine(FieldDeclarationSyntax node)
         {
-            var fieldDeclaration = _declaration.Declaration;
+            var fieldDeclaration = node.Declaration;
             var typeSyntax = fieldDeclaration.Type;
             if (typeSyntax.IsVar == false)
             {
-                return this;
+                return node;
             }
             var firstVariableValue = fieldDeclaration.Variables[0].Initializer.Value;
 
@@ -169,9 +167,9 @@ namespace RoslynAnalysis.Convert.AnalysisToJava
                 _ => typeSyntax
             }).WithTrailingTrivia(typeSyntax.GetTrailingTrivia()));
 
-            _declaration = _declaration.WithDeclaration(fieldDeclaration);
+            node = node.WithDeclaration(fieldDeclaration);
 
-            return this;
+            return node;
         }
     }
 }

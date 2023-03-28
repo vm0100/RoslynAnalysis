@@ -15,7 +15,7 @@ public class ConvertType
     /// <returns></returns>
     public static string GenerateCode(TypeSyntax typeNode)
     {
-        typeNode = TypeRewriter.Build(typeNode).Rewriter();
+        typeNode = new TypeRewriter().Visit(typeNode) as TypeSyntax;
 
         return typeNode.ToString();
     }
