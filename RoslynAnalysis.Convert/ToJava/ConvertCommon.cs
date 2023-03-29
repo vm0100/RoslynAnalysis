@@ -32,11 +32,6 @@ public class ConvertCommon
     public static string TypeToJava(TypeSyntax typeSyntax)
     {
         var typeName = typeSyntax.IsKind(SyntaxKind.GenericName) ? ((GenericNameSyntax)typeSyntax).Identifier.ValueText : typeSyntax.ToString();
-        if (typeName.StartsWith("_"))
-        {
-            return typeName.TrimStart('_');
-        }
-
         if (typeName.Contains('.'))
         {
             typeName = typeName[(typeName.LastIndexOf('.')..)];

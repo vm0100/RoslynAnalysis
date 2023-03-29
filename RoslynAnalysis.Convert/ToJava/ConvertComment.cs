@@ -8,7 +8,7 @@ namespace RoslynAnalysis.Convert.ToJava;
 
 public class ConvertComment
 {
-    public static string GenerateClassComment(SyntaxTrivia commentNode, int indent = 0)
+    public static string GenerateClassComment(SyntaxTriviaList commentNode, int indent = 0)
     {
         var sbdr = new StringBuilder(commentNode.Span.End);
 
@@ -19,16 +19,6 @@ public class ConvertComment
         sbdr.AppendLine(" */".PadIndented(indent));
         return sbdr.ToString();
     }
-
-    public static string GenerateDeclareCommennt(SyntaxTrivia commentNode, int indent = 0)
-    {
-        var sbdr = new StringBuilder(1000);
-        sbdr.AppendLine("/**".PadIndented(indent));
-        sbdr.AppendLine(AnalysisToComment(commentNode.ToFullString(), indent).PadIndented(indent));
-        sbdr.AppendLine(" */".PadIndented(indent));
-        return sbdr.ToString();
-    }
-
 
     public static string GenerateDeclareCommennt(SyntaxTriviaList commentNode, int indent = 0)
     {

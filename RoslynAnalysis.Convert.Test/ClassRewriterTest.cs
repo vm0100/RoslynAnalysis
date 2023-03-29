@@ -11,46 +11,15 @@ namespace RoslynAnalysis.Convert.Test
 {
     public class ClassRewriterTest
     {
-        [Fact(DisplayName = "类注释转换测试")]
-        public void VisitCommentTest()
-        {
-            var code = @"
-/// <summary>
-/// 张三李四王五
-/// </summary>
-public class ConvertArgument{}";
-
-            var expected = @$"
-/**
- * @author 
- * @Description:  张三李四王五
- * @date: {DateTime.Now:yyyy-MM-dd}
- */
-public class ConvertArgument{{}}";
-
-            var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = new CSharpToJavaRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
-            var actual = memberSyntax.ToFullString();
-            Assert.Equal(expected, actual);
-        }
-
         [Fact(DisplayName = "类属性转换测试")]
         public void VisitAnnotationTest()
         {
             var code = @"
-/// <summary>
-/// 张三李四王五
-/// </summary>
 [Attr(name=""表1"")]
 [Attr1(""表2""), Attr2]
 public class ConvertArgument{}";
 
             var expected = @$"
-/**
- * @author 
- * @Description:  张三李四王五
- * @date: {DateTime.Now:yyyy-MM-dd}
- */
 [@Attr(name=""表1"")]
 [@Attr1(""表2"")]
 [@Attr2]

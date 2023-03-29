@@ -16,23 +16,6 @@ public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
     private bool isDto = false;
     private bool isService = false;
 
-    public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
-    {
-        if (trivia.IsDocumentationComment())
-        {
-            var commentText = ConvertComment.GenerateClassComment(trivia);
-            // ConvertComment.GenerateDeclareCommennt(trivia)
-            trivia = SyntaxFactory.Trivia(
-                        SyntaxFactory.DocumentationCommentTrivia(
-                            SyntaxKind.MultiLineDocumentationCommentTrivia,
-                            SyntaxFactory.SingletonList<XmlNodeSyntax>(
-                                SyntaxFactory.XmlText(commentText))));
-        }
-
-        return base.VisitTrivia(trivia);
-    }
-
-
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
         var className = node.Identifier.ValueText;

@@ -14,7 +14,7 @@ public class ConvertField
     /// <returns></returns>
     public static string GenerateCode(FieldDeclarationSyntax fieldNode, int indent = 0)
     {
-        var comment = fieldNode.GetTrailingTrivia().ToString().PadIndented(indent);
+        var comment = ConvertComment.GenerateDeclareCommennt(fieldNode.GetTrailingTrivia()).PadIndented(indent);
         var attribute = string.Join("\n", fieldNode.AttributeLists.ExpandAndToString(attr => attr.ToString().TrimStart('[').TrimEnd(']'), "\n" + "".PadIndented(indent)));
         if (attribute.IsNotNullOrWhiteSpace())
         {
@@ -48,6 +48,7 @@ public class ConvertField
     /// <returns></returns>
     public static string GenerateCode(LocalDeclarationStatementSyntax fieldNode, int indent = 0)
     {
-        return GenerateCode(SyntaxFactory.FieldDeclaration(fieldNode.AttributeLists, fieldNode.Modifiers, fieldNode.Declaration, fieldNode.SemicolonToken), indent);
+        return GenerateCode(SyntaxFactory.FieldDeclaration(fieldNode.AttributeLists, fieldNode.Modifiers, fieldNode.Declaration, fieldNode.SemicolonToken)
+                                         .WithLeadingTrivia(fieldNode.GetLeadingTrivia()), indent);
     }
 }

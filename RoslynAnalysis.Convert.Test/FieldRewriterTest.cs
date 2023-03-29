@@ -11,6 +11,7 @@ namespace RoslynAnalysis.Convert.Test
 {
     public class FieldReWriterTest
     {
+
         /// <summary>
         /// 执行生成测试
         /// </summary>
@@ -67,7 +68,6 @@ namespace RoslynAnalysis.Convert.Test
 
         [Theory(DisplayName = "列表类型初始化字段验证"),
             InlineData("List<int> numList = new List<int>();", "List<Integer> numList = Lists.newArrayList();"),
-            InlineData("int[] intArr = new int[5];", "Integer[] intArr = new Integer[5];"),
             InlineData("int[] intArr = new int[5];", "Integer[] intArr = new Integer[5];"),
             InlineData("Dictionary<Guid, string> dict = new Dictionary<Guid, string>();", "Map<UUID, String> dict = Maps.newHashMap();")]
         public void NormalEnumerableCreateRewriteTest(string csharpCode, string expectCode)

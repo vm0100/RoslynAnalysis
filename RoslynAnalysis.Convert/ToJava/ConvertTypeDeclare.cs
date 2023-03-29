@@ -14,7 +14,7 @@ public class ConvertTypeDeclare
         sbdr.AppendLine(ConvertCommon.GenerateImportPackage());
 
         // 文档注释
-        sbdr.Append(classNode.GetLeadingTrivia().ExpandAndToString("\n"));
+        sbdr.Append(ConvertComment.GenerateClassComment(classNode.GetLeadingTrivia()));
 
         // 注解部分
         sbdr.AppendLine(GenerateAttribute(classNode));
