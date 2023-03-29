@@ -34,7 +34,7 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
     {
         return new TypeRewriter().Visit(node);
     }
-    
+
     public SyntaxNode RewriterList(ObjectCreationExpressionSyntax node)
     {
         // new List<string>() { "", "", ""};转换为 Lists.newArrayList("", "", "");
@@ -95,7 +95,7 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
                                                  .WithArgumentList(
                                                         SyntaxFactory.ArgumentList(
                                                             SyntaxFactory.SeparatedList(
-                                                                initExp.Expressions.Select(SyntaxFactory.Argument)))
+                                                                initExp.Expressions.Select(e => SyntaxFactory.Argument(e).WithLeadingTrivia(SyntaxFactory.Space))))
                                                  ).WithLeadingTrivia(SyntaxFactory.Space)).ToList();
 
         var elmInitCloseTokenList = Enumerable.Range(0, elmInitExpList.Count).Select(i => SyntaxFactory.Token(SyntaxKind.SemicolonToken)).ToList();
@@ -113,4 +113,10 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
 
         return base.VisitInitializerExpression(newNode);
     }
+
+    public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+    {
+        return new MemberAccessRewriter().Visit(node);
+    }
+
 }

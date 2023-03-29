@@ -163,4 +163,14 @@ public class ClassRewriter : CSharpSyntaxRewriter
         var isExistsServiceScopeAttr = attrList.Any(t => t.Name.ToString().In("AppServiceScope"));
         return isExtendService || isExistsServiceScopeAttr || className.InEndsWithIgnoreCase("Service");
     }
+
+    public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+    {
+        return new FieldRewriter(isEntity, isDto, isService).Visit(node);
+    }
+
+    public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+    {
+        return new FieldRewriter(isEntity, isDto, isService).Visit(node);
+    }
 }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 
+using Microsoft.CodeAnalysis;
+
 using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.Rewriter
@@ -12,6 +14,17 @@ namespace RoslynAnalysis.Convert.Rewriter
     {
         private bool isRepository = false;
         private bool isLazyService = false;
+
+        private bool _isEntity;
+        private bool _isDto;
+        private bool _isService;
+
+        public FieldRewriter(bool isEntity, bool isDto, bool isService) : base()
+        {
+            _isEntity = isEntity;
+            _isDto = isDto;
+            _isService = isService;
+        }
 
         public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
         {
@@ -105,7 +118,6 @@ namespace RoslynAnalysis.Convert.Rewriter
         public FieldDeclarationSyntax VisitType(FieldDeclarationSyntax node)
         {
             var declaration = node.Declaration;
-
             var newType = new TypeRewriter().Visit(declaration.Type) as TypeSyntax;
             return node.WithDeclaration(declaration.WithType(newType)).WithLeadingTrivia(node.GetLeadingTrivia());
         }
@@ -134,7 +146,6 @@ namespace RoslynAnalysis.Convert.Rewriter
 
             return node;
         }
-
 
         public FieldDeclarationSyntax VisitAttribute(FieldDeclarationSyntax node)
         {
@@ -200,6 +211,29 @@ namespace RoslynAnalysis.Convert.Rewriter
             }
 
             return base.VisitEqualsValueClause(node);
+        }
+
+        public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            var newNode = node.WithType(new TypeRewriter().Visit(node.Type) as TypeSyntax);
+
+            if (newNode.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
+            {
+                var newModifiers = newNode.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword) == false).ToList();
+                newModifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.PrivateKeyword).WithTrailingTrivia(SyntaxFactory.Space));
+
+                newNode = newNode.WithModifiers(SyntaxFactory.TokenList(newModifiers));
+            }
+
+            newNode = newNode.WithAccessorList(null);
+
+            newNode = newNode.WithIdentifier(SyntaxFactory.Identifier(newNode.Identifier.ValueText.ToLowerTitleCase()));
+
+            newNode = newNode.WithTrailingTrivia(SyntaxFactory.Trivia(
+                                                         SyntaxFactory.SkippedTokensTrivia().WithTokens(
+                                                             SyntaxFactory.TokenList(
+                                                                 SyntaxFactory.Token(SyntaxKind.SemicolonToken)))));
+            return base.VisitPropertyDeclaration(newNode);
         }
 
     }

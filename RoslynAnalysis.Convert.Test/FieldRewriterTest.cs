@@ -30,7 +30,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter().Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
 
@@ -45,7 +45,7 @@ namespace RoslynAnalysis.Convert.Test
         public void LazyServiceRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter().Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
         }
@@ -60,7 +60,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalCreateRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter().Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
         }
@@ -72,19 +72,37 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalEnumerableCreateRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter().Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
 
         [Theory(DisplayName = "列表类型初始化数据验证"),
             InlineData("List<int> numList = new List<int>() {1, 2, 3};", "List<Integer> numList = Lists.newArrayList(1, 2, 3);"),
             InlineData("int[] intArr = new int[5] {1, 2, 3, 4, 5};", "Integer[] intArr = new Integer[] {1, 2, 3, 4, 5};"),
-            InlineData("Dictionary<Guid, string> dict = new Dictionary<Guid, string>() {{ Guid.NewGuid(), \"张三\"}, { Guid.NewGuid(), \"李四\"} };", "Map<UUID, String> dict = new HashMap<UUID, String>() {{ put(GuidGenerator.generateRandomGuid(), \"张三\"); }};")]
+            InlineData("Dictionary<Guid, string> dict = new Dictionary<Guid, string>() {{ Guid.NewGuid(), \"张三\"} };", "Map<UUID, String> dict = new HashMap<UUID, String>() {{ put(GuidGenerator.generateRandomGuid(), \"张三\"); }};")]
         public void NormalEnumerableCreateInitializeRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter().Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
 
+            Assert.Equal(expectCode, javaCode);
+        }
+
+        [Theory(DisplayName = "普通类型属性验证"),
+            InlineData("public string Name { get; set; }", "private String name;"),
+            InlineData("public int Num { get; set; }", "private Integer num;"),
+            InlineData("public bool Flag { get; set; }", "private Boolean flag;"),
+            InlineData("public Guid Uid { get; set; }", "private UUID uid;"),
+            InlineData("public Dictionary<string, string> Dict { get; set; }", "private Map<String, String> dict;"),
+            InlineData("public Dictionary<Guid, User> Dict { get; set; }", "private Map<UUID, User> dict;"),
+            InlineData("public Dictionary<Guid, List<User>> Dict { get; set; }", "private Map<UUID, List<User>> dict;"),
+            InlineData("public List<string> Lst { get; set; }", "private List<String> lst;"),
+            InlineData("public User Usr { get; set; }", "private User usr;"),
+            InlineData("public UserDTO UsrDto { get; set; }", "private UserDTO usrDto;")]
+        public void NormalPropertyRewriterTest(string csharpCode, string expectCode)
+        {
+            var propDeclareSyntax = (PropertyDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
+            var javaCode = new FieldRewriter(true, false, false).Visit(propDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
     }

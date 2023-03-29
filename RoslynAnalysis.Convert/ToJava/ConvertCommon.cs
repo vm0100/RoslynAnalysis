@@ -227,7 +227,7 @@ public class ConvertCommon
                 {
                     return typeName;
                 }
-                return string.Empty;
+                return args.IsNull() ? typeName + "." + constantName : typeName + "." + constantName + "(" + args + ")";
         }
     }
 
