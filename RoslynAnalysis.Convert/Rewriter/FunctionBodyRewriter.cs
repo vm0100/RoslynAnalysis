@@ -37,9 +37,13 @@ public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
             return VisitStatisMemberAccessExpression(callerName, memberName, node);
         }
 
+        if (callerName[..1].IsLower())
+        {
+            return VisitInstantiationMemberAccessExpression(callerName, memberName, node);
+        }
+
         return base.VisitMemberAccessExpression(node);
     }
-
 
     public SyntaxNode VisitStatisMemberAccessExpression(string callerName, string memberName, MemberAccessExpressionSyntax node)
     {
@@ -66,6 +70,13 @@ public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
         }
 
         return base.VisitMemberAccessExpression(newNode.WithTrailingTrivia(node.GetTrailingTrivia()));
+    }
+
+    public SyntaxNode VisitInstantiationMemberAccessExpression(string callerName, string memberName, MemberAccessExpressionSyntax node) 
+    {
+
+
+        return node;
     }
 
     public override SyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node)

@@ -19,7 +19,6 @@ namespace RoslynAnalysis.Convert.Test
         public void StatisMemberAccessRewriterTest(string csharpCode, string expectCode)
         {
             var statement = SyntaxFactory.ParseStatement(csharpCode);
-
             var javaCode = new CSharpToJavaRewriter().Visit(statement).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
@@ -32,7 +31,16 @@ namespace RoslynAnalysis.Convert.Test
         public void LazyServiceAccessRewriterTest(string csharpCode, string expectCode)
         {
             var statement = SyntaxFactory.ParseStatement(csharpCode);
+            var javaCode = new CSharpToJavaRewriter().Visit(statement).ToFullString();
 
+            Assert.Equal(expectCode, javaCode);
+        }
+
+        [Theory,
+            InlineData("user.UserName", "user.getUserName()")]
+        public void InstantiationMemberAccessRewriterTest(string csharpCode, string expectCode)
+        {
+            var statement = SyntaxFactory.ParseStatement(csharpCode);
             var javaCode = new CSharpToJavaRewriter().Visit(statement).ToFullString();
 
             Assert.Equal(expectCode, javaCode);

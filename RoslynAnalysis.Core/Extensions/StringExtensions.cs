@@ -40,6 +40,7 @@ public static class StringExtensions
         => str.IsNullOrWhiteSpace() ? elseStr : str;
 
     public static bool IsUpper(this string str) => str.Any(c => c >= 'A' && c <= 'Z');
+    public static bool IsLower(this string str) => str.Any(c => c >= 'a' && c <= 'z');
 
     public static bool In(this string str, params string[] strArr) => strArr.Contains(str);
 
