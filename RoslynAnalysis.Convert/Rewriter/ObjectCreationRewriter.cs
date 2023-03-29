@@ -45,19 +45,19 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
             SyntaxFactory.IdentifierName("newArrayList"));
 
         SyntaxToken separator = SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space);
+        var argumentList = node.Initializer?.Expressions.Select(SyntaxFactory.Argument) ?? new List<ArgumentSyntax>();
+        var separatorList = SyntaxFactory.TokenList(Enumerable.Range(0, (node.Initializer?.Expressions.Count ?? 1) - 1).Select(i => separator));
 
         var invocationExp = SyntaxFactory.InvocationExpression(listsNewArrayMember,
                                 SyntaxFactory.ArgumentList(
-                                    SyntaxFactory.SeparatedList(
-                                        node.Initializer?.Expressions.Select(SyntaxFactory.Argument), 
-                                        Enumerable.Range(0, node.Initializer?.Expressions.Count - 1 ?? 0).Select(i => separator))));
+                                    SyntaxFactory.SeparatedList(argumentList, separatorList)));
 
         return base.VisitInvocationExpression(invocationExp);
     }
 
     public SyntaxNode RewriterEmptyDictionary(ObjectCreationExpressionSyntax node)
     {
-        if (node.Initializer != null || node.Initializer.Expressions.Count > 0)
+        if (node.Initializer != null && node.Initializer.Expressions.Count > 0)
         {
             var genericType = node.Type as GenericNameSyntax;
             node = node.WithType(genericType.WithIdentifier(SyntaxFactory.Identifier("HashMap")));
@@ -76,7 +76,41 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node)
     {
-        // 如果类型是HashMap，重写为put(xxx)
-        return base.VisitInitializerExpression(node);
+        if (node.Expressions.Count < 1 || node.Parent.IsKind(SyntaxKind.CollectionInitializerExpression))
+        {
+            return base.VisitInitializerExpression(node);
+        }
+
+        var closeToken = SyntaxFactory.Token(SyntaxFactory.TriviaList(),
+                                             SyntaxKind.CloseParenToken,
+                                             SyntaxFactory.TriviaList(
+                                                 SyntaxFactory.Trivia(
+                                                     SyntaxFactory.SkippedTokensTrivia().WithTokens(
+                                                         SyntaxFactory.TokenList(
+                                                             SyntaxFactory.Token(SyntaxKind.SemicolonToken))))));
+
+        var elmInitExpList = node.Expressions.OfType<InitializerExpressionSyntax>().Select(initExp =>
+                                SyntaxFactory.InvocationExpression(
+                                    SyntaxFactory.IdentifierName("put"))
+                                                 .WithArgumentList(
+                                                        SyntaxFactory.ArgumentList(
+                                                            SyntaxFactory.SeparatedList(
+                                                                initExp.Expressions.Select(SyntaxFactory.Argument)))
+                                                 ).WithLeadingTrivia(SyntaxFactory.Space)).ToList();
+
+        var elmInitCloseTokenList = Enumerable.Range(0, elmInitExpList.Count).Select(i => SyntaxFactory.Token(SyntaxKind.SemicolonToken)).ToList();
+        if (elmInitCloseTokenList.Count > 0)
+        {
+            elmInitCloseTokenList[elmInitCloseTokenList.Count - 1] = elmInitCloseTokenList.Last().WithTrailingTrivia(SyntaxFactory.Space);
+        }
+
+        var newNode = node.WithExpressions(
+            SyntaxFactory.SeparatedList<ExpressionSyntax>(
+                SyntaxFactory.SingletonList(
+                    SyntaxFactory.InitializerExpression(
+                    SyntaxKind.ComplexElementInitializerExpression,
+                        SyntaxFactory.SeparatedList<ExpressionSyntax>(elmInitExpList, elmInitCloseTokenList)))));
+
+        return base.VisitInitializerExpression(newNode);
     }
 }
