@@ -164,11 +164,6 @@ public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
             node = node.WithValue(invocationExp);
         }
 
-        if (node.Value.IsKinds(SyntaxKind.ObjectCreationExpression, SyntaxKind.ArrayCreationExpression))
-        {
-            node = node.WithValue(new CSharpToJavaRewriter().Visit(node.Value) as ExpressionSyntax);
-        }
-
         return base.VisitEqualsValueClause(node);
     }
 

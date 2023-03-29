@@ -85,13 +85,12 @@ public partial class CSharpToJavaRewriter
                                                              SyntaxFactory.Token(SyntaxKind.SemicolonToken))))));
 
         var elmInitExpList = node.Expressions.OfType<InitializerExpressionSyntax>().Select(initExp =>
-                                SyntaxFactory.InvocationExpression(
-                                    SyntaxFactory.IdentifierName("put"))
-                                                 .WithArgumentList(
-                                                        SyntaxFactory.ArgumentList(
-                                                            SyntaxFactory.SeparatedList(
-                                                                initExp.Expressions.Select(e => SyntaxFactory.Argument(e).WithLeadingTrivia(SyntaxFactory.Space))))
-                                                 ).WithLeadingTrivia(SyntaxFactory.Space)).ToList();
+                                SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName("put"))
+                                             .WithArgumentList(
+                                                SyntaxFactory.ArgumentList(
+                                                    SyntaxFactory.SeparatedList(
+                                                        initExp.Expressions.Select(e => SyntaxFactory.Argument(e).WithLeadingTrivia(SyntaxFactory.Space)))))
+                                             .WithLeadingTrivia(SyntaxFactory.Space)).ToList();
 
         var elmInitCloseTokenList = Enumerable.Range(0, elmInitExpList.Count).Select(i => SyntaxFactory.Token(SyntaxKind.SemicolonToken)).ToList();
         if (elmInitCloseTokenList.Count > 0)

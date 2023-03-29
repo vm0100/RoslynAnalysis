@@ -33,7 +33,9 @@ public partial class CSharpToJavaRewriter
         //int[] iArr = new int[0]; // 无初始化语句必须带size
         //int[] iArr1 = { 1, 3 };
         //int[] iArr2 = new int[] { 1, 3 }; // 有初始化语句带size会报错，必须移除
-        if (node.RankSpecifiers.Any(r => r.Sizes.Any(s => s.IsKind(SyntaxKind.OmittedArraySizeExpression) == false)))
+        if (node.RankSpecifiers.Any(r => r.Sizes.Any(s => s.IsKind(SyntaxKind.OmittedArraySizeExpression) == false)) 
+                && node.Parent is ArrayCreationExpressionSyntax arrayCreationExpression 
+                && arrayCreationExpression.Initializer != null)
         {
             var newRankSpecifiers = SyntaxFactory.List<ArrayRankSpecifierSyntax>();
             foreach (var arrayRank in node.RankSpecifiers)
