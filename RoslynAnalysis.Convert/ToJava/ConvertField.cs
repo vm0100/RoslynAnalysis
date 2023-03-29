@@ -14,8 +14,8 @@ public class ConvertField
     /// <returns></returns>
     public static string GenerateCode(FieldDeclarationSyntax fieldNode, int indent = 0)
     {
-        var comment = ConvertComment.GenerateDeclareCommennt(fieldNode.GetTrailingTrivia(), indent);
-        var attribute = string.Join("\n", fieldNode.AttributeLists.SelectMany(attrList => attrList.Attributes.Select(attr => "@" + attr.Name.ToString() + (attr.ArgumentList == null || attr.ArgumentList.Arguments.Count < 1 ? "" : "(" + string.Join(", ", attr.ArgumentList.Arguments.Select(arg => ConvertInvoke.GenerateCode(arg.Expression))) + ")"))));
+        var comment = fieldNode.GetTrailingTrivia().ToString().PadIndented(indent);
+        var attribute = string.Join("\n", fieldNode.AttributeLists.ExpandAndToString(attr => attr.ToString().TrimStart('[').TrimEnd(']'), "\n" + "".PadIndented(indent)));
         if (attribute.IsNotNullOrWhiteSpace())
         {
             attribute = attribute.PadIndented(indent) + "\n";
@@ -36,8 +36,7 @@ public class ConvertField
         return string.Join("\n", fieldNode.Declaration.Variables.Select(variableSyntax =>
         {
             var fieldName = variableSyntax.Identifier.ValueText.TrimStart('_');
-            var initializer = variableSyntax.Initializer == null ? ";" : $" = {ConvertInvoke.GenerateCode(variableSyntax.Initializer.Value, indent)};";
-            return $"{comment}{attribute}{modifier}{type} {fieldName}{initializer}";
+            return $"{comment}{attribute}{modifier}{type} {fieldName}{variableSyntax.Initializer?.ToString()}";
         }));
     }
 
