@@ -78,7 +78,7 @@ namespace RoslynAnalysis.Convert.Test
 
         [Theory(DisplayName = "列表类型初始化数据验证"),
             InlineData("List<int> numList = new List<int>() {1, 2, 3};", "List<Integer> numList = Lists.newArrayList(1, 2, 3);"),
-            InlineData("int[] intArr = new int[5] {1, 2, 3, 4, 5};", "Integer[] intArr = new Integer[] { 1, 2, 3, 4, 5 };"),
+            InlineData("int[] intArr = new int[5] {1, 2, 3, 4, 5};", "Integer[] intArr = new Integer[] {1, 2, 3, 4, 5};"),
             InlineData("Dictionary<Guid, string> dict = new Dictionary<Guid, string>() {{ Guid.NewGuid(), \"张三\"}, { Guid.NewGuid(), \"李四\"} };", "Map<UUID, String> dict = new HashMap<UUID, String>() {{ put(GuidGenerator.generateRandomGuid(), \"张三\"); }};")]
         public void NormalEnumerableCreateInitializeRewriteTest(string csharpCode, string expectCode)
         {

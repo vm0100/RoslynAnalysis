@@ -34,8 +34,7 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
     {
         return new TypeRewriter().Visit(node);
     }
-
-
+    
     public SyntaxNode RewriterList(ObjectCreationExpressionSyntax node)
     {
         // new List<string>() { "", "", ""};转换为 Lists.newArrayList("", "", "");
@@ -76,11 +75,12 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node)
     {
-        if (node.Expressions.Count < 1 || node.Parent.IsKind(SyntaxKind.CollectionInitializerExpression))
+        if (node.Expressions.Count < 1 || node.IsKind(SyntaxKind.CollectionInitializerExpression) == false || node.Parent.IsKind(SyntaxKind.CollectionInitializerExpression))
         {
             return base.VisitInitializerExpression(node);
         }
 
+        // 将Dictionary<x,x>{{ x, x }, { x1, x1}} 映射为 new HashMap(){{ put(x, x); put(x1, x1); }};
         var closeToken = SyntaxFactory.Token(SyntaxFactory.TriviaList(),
                                              SyntaxKind.CloseParenToken,
                                              SyntaxFactory.TriviaList(

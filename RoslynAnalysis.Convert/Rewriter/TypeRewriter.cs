@@ -28,16 +28,24 @@ public class TypeRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitArrayType(ArrayTypeSyntax node)
     {
-        node = node.WithElementType(SyntaxFactory.IdentifierName(ConvertCommon.TypeToJava(node.ElementType)));
+        var newNode = node.WithElementType(SyntaxFactory.IdentifierName(ConvertCommon.TypeToJava(node.ElementType)));
 
+        //int[] iArr = new int[0]; // 无初始化语句必须带size
+        //int[] iArr1 = { 1, 3 };
+        //int[] iArr2 = new int[] { 1, 3 }; // 有初始化语句带size会报错，必须移除
+        if (node.RankSpecifiers.Any(r => r.Sizes.Any(s => s.IsKind(SyntaxKind.OmittedArraySizeExpression) == false)))
+        {
+            var newRankSpecifiers = SyntaxFactory.List<ArrayRankSpecifierSyntax>();
+            foreach (var arrayRank in node.RankSpecifiers)
+            {
+                newRankSpecifiers = newRankSpecifiers.Add(
+                    SyntaxFactory.ArrayRankSpecifier(SyntaxFactory.SeparatedList<ExpressionSyntax>(
+                        arrayRank.Sizes.Select(s =>
+                            SyntaxFactory.OmittedArraySizeExpression()))));
+            }
+            newNode = node.WithRankSpecifiers(newRankSpecifiers).WithTrailingTrivia(node.GetTrailingTrivia());
+        }
 
-        // TODO: 清理new int[6];中的6
-        //if (node.RankSpecifiers.Count > 0)
-        //{
-
-        //    node = node.WithRankSpecifiers(SyntaxFactory.SingletonList(SyntaxFactory.ArrayRankSpecifier()));
-        //}
-
-        return base.VisitArrayType(node);
+        return base.VisitArrayType(newNode);
     }
 }
