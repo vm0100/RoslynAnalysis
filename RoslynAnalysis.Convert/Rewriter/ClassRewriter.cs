@@ -10,11 +10,28 @@ using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.Rewriter;
 
-public class ClassRewriter : CSharpSyntaxRewriter
+public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
 {
     private bool isEntity = false;
     private bool isDto = false;
     private bool isService = false;
+
+    public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+    {
+        if (trivia.IsDocumentationComment())
+        {
+            var commentText = ConvertComment.GenerateClassComment(trivia);
+            // ConvertComment.GenerateDeclareCommennt(trivia)
+            trivia = SyntaxFactory.Trivia(
+                        SyntaxFactory.DocumentationCommentTrivia(
+                            SyntaxKind.MultiLineDocumentationCommentTrivia,
+                            SyntaxFactory.SingletonList<XmlNodeSyntax>(
+                                SyntaxFactory.XmlText(commentText))));
+        }
+
+        return base.VisitTrivia(trivia);
+    }
+
 
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
@@ -41,20 +58,6 @@ public class ClassRewriter : CSharpSyntaxRewriter
         isService = IsService(className, attrList, baseTypeList);
         
         return base.VisitClassDeclaration(VisitAttribute(node));
-    }
-
-    public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
-    {
-        if (trivia.IsDocumentationComment())
-        {
-            trivia = SyntaxFactory.Trivia(
-                        SyntaxFactory.DocumentationCommentTrivia(
-                            SyntaxKind.MultiLineDocumentationCommentTrivia,
-                            SyntaxFactory.SingletonList<XmlNodeSyntax>(
-                                SyntaxFactory.XmlText(ConvertComment.GenerateClassComment(trivia)))));
-        }
-
-        return base.VisitTrivia(trivia);
     }
 
     public override SyntaxNode VisitAttribute(AttributeSyntax node)
@@ -164,13 +167,4 @@ public class ClassRewriter : CSharpSyntaxRewriter
         return isExtendService || isExistsServiceScopeAttr || className.InEndsWithIgnoreCase("Service");
     }
 
-    public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
-    {
-        return new FieldRewriter(isEntity, isDto, isService).Visit(node);
-    }
-
-    public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
-    {
-        return new FieldRewriter(isEntity, isDto, isService).Visit(node);
-    }
 }

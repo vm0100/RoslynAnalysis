@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
 namespace RoslynAnalysis.Convert.Rewriter;
 
-public class FunctionBodyRewriter : CSharpSyntaxRewriter
+public partial class CSharpToJavaRewriter : CSharpSyntaxRewriter
 {
     /// <summary>
     /// 只处理 entityService.Instance 或者 repository.Value的节点
@@ -15,34 +16,56 @@ public class FunctionBodyRewriter : CSharpSyntaxRewriter
     /// <returns></returns>
     public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
     {
-        var isRepository = node.Expression is IdentifierNameSyntax identifier && identifier.Identifier.ValueText.InEndsWithIgnoreCase("EntityService", "Repository");
-        if (isRepository == false || node.Name.Identifier.ValueText.In("Instance", "Value") == false)
+        if (node.Expression.IsKind(SyntaxKind.IdentifierName) == false)
         {
             return base.VisitMemberAccessExpression(node);
         }
-        
-        var newNode = RewriterRepositoryMemberAccess(node);
-        if (newNode.IsKinds(SyntaxKind.SimpleMemberAccessExpression, SyntaxKind.PointerMemberAccessExpression))
+
+        var callerName = (node.Expression as IdentifierNameSyntax).Identifier.ValueText;
+        var memberName = node.Name.Identifier.ValueText;
+
+        var isServiceOrRepository = callerName.InEndsWithIgnoreCase("EntityService", "Repository", "Service");
+        if (isServiceOrRepository && memberName.In("Instance", "Value"))
         {
-            return newNode;
+            // 移除Instance
+            return base.Visit(node.Expression);
         }
 
-        return base.VisitMemberAccessExpression(newNode as MemberAccessExpressionSyntax);
+        // 首字母大写视为静态类
+        if (callerName[..1].IsUpper())
+        {
+            return VisitStatisMemberAccessExpression(callerName, memberName, node);
+        }
+
+        return base.VisitMemberAccessExpression(node);
     }
 
-    public SyntaxNode RewriterRepositoryMemberAccess(MemberAccessExpressionSyntax node)
+
+    public SyntaxNode VisitStatisMemberAccessExpression(string callerName, string memberName, MemberAccessExpressionSyntax node)
     {
         var newNode = node;
-
-        // 只处理 entityService.Instance 或者 repository.Value的节点
-        // 重写为 entityService 和 repository
-        var isRepository = newNode.Expression is IdentifierNameSyntax identifier && identifier.Identifier.ValueText.InEndsWithIgnoreCase("EntityService", "Repository");
-        if (isRepository == false || newNode.Name.Identifier.ValueText.In("Instance", "Value") == false)
+        if (callerName == nameof(Guid))
         {
-            return newNode;
+            switch (memberName)
+            {
+                case nameof(Guid.Empty):
+                    newNode = newNode.WithExpression(SyntaxFactory.IdentifierName("UUIDUtil"))
+                                     .WithName(SyntaxFactory.IdentifierName("emptyUUID"));
+                    break;
+                case nameof(Guid.Parse):
+                    newNode = newNode.WithExpression(SyntaxFactory.IdentifierName("UUIDUtil"))
+                                     .WithName(SyntaxFactory.IdentifierName("parse"));
+                    break;
+                case nameof(Guid.NewGuid):
+                    newNode = newNode.WithExpression(SyntaxFactory.IdentifierName("GuidGenerator"))
+                                     .WithName(SyntaxFactory.IdentifierName("generateRandomGuid"));
+                    break;
+                default:
+                    break;
+            }
         }
-        
-        return base.Visit(newNode.Expression);
+
+        return base.VisitMemberAccessExpression(newNode.WithTrailingTrivia(node.GetTrailingTrivia()));
     }
 
     public override SyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node)

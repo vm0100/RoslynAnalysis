@@ -9,7 +9,7 @@ using RoslynAnalysis.Convert.ToJava;
 
 namespace RoslynAnalysis.Convert.Rewriter;
 
-public class TypeRewriter : CSharpSyntaxRewriter
+public partial class CSharpToJavaRewriter
 {
     public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
     {

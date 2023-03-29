@@ -8,8 +8,6 @@ public class ConvertTypeDeclare
 {
     public static string GenerateCode(TypeDeclarationSyntax classNode, int indent = 0)
     {
-        classNode = new ClassRewriter().Visit(classNode) as TypeDeclarationSyntax;
-
         var sbdr = new StringBuilder(10000);
 
         // 公共包部分
@@ -97,7 +95,7 @@ public class ConvertTypeDeclare
         sbdr.Append(constructorDeclaration.Modifiers.ToString().Trim().PadIndented(indent) + " ");
         sbdr.Append(constructorDeclaration.Identifier.ValueText);
         sbdr.Append('(');
-        sbdr.Append(ConvertParameter.GenerateCode(constructorDeclaration.ParameterList));
+        sbdr.Append(constructorDeclaration.ParameterList.ToString());
         sbdr.AppendLine(") {");
         sbdr.Append(ConvertMethod.GenerateStatement(constructorDeclaration.Body, indent + 1));
         sbdr.AppendLine("}".PadIndented(indent));

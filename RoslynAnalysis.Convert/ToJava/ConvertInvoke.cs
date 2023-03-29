@@ -56,7 +56,7 @@ public class ConvertInvoke
             SyntaxKind.ConditionalAccessExpression => GenerateConditionalAccess((ConditionalAccessExpressionSyntax)exp, indent),
             SyntaxKind.MemberBindingExpression => GenerateMemberBinding((MemberBindingExpressionSyntax)exp),
             // 泛型类型
-            SyntaxKind.GenericName => ConvertType.GenerateCode((GenericNameSyntax)exp),
+            SyntaxKind.GenericName => exp.ToString(),
             // 匿名方法
             SyntaxKind.AnonymousMethodExpression => GenerateAnonymousMethod((AnonymousMethodExpressionSyntax)exp, indent),
             // 插值字符串
@@ -72,29 +72,7 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateObjectCreation(ObjectCreationExpressionSyntax exp)
     {
-        var rewriterExp = new ObjectCreationRewriter().Visit(exp) as ExpressionSyntax;
-        if (rewriterExp.IsKind(SyntaxKind.ObjectCreationExpression) == false)
-        {
-            return GenerateCode(rewriterExp);
-        }
-
-        var initializerSyntax = exp.Initializer;
-
-        var className = exp.Type.ToString();
-        var args = ConvertArgument.GenerateCode(exp.ArgumentList);
-
-        var sbdr = new StringBuilder($"new {className}({args})", exp.Span.Length);
-
-        if (initializerSyntax != null && initializerSyntax.Expressions.Count > 0)
-        {
-            var initializerExp = initializerSyntax.Expressions;
-
-            sbdr.Append(" {{ ");
-            sbdr.Append(initializerSyntax.Expressions.Select(iexp => GenerateCode(iexp) + ";").ExpandAndToString(" "));
-            sbdr.Append("}}");
-        }
-
-        return sbdr.ToString();
+        return exp.ToString();
     }
 
     public static string GenerateSetProperty(AssignmentExpressionSyntax exp)
@@ -138,7 +116,7 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateArrayCreation(ArrayCreationExpressionSyntax exp)
     {
-        var initType = ConvertType.GenerateCode(exp.Type.ElementType);
+        var initType = exp.Type.ElementType.ToString();
         var initializerSyntax = exp.Initializer;
         var isNoInitializer = initializerSyntax == null;
 
@@ -182,7 +160,7 @@ public class ConvertInvoke
     /// <returns></returns>
     private static string GenerateDictioniaryInitializer(InitializerExpressionSyntax exp)
     {
-        return $"put({string.Join(", ", exp.Expressions.Select(GenerateCode))})";
+        return exp.ToString();
     }
 
     /// <summary>
@@ -192,21 +170,6 @@ public class ConvertInvoke
     /// <returns></returns>
     public static string GenerateLiteral(LiteralExpressionSyntax exp)
     {
-        // 赋值语句
-        if (exp.Parent.IsKind(SyntaxKind.EqualsValueClause))
-        {
-            var javaType = ConvertType.GenerateCode(((VariableDeclarationSyntax)exp.Parent.Parent.Parent).Type);
-            if (javaType == "BigDecimal")
-            {
-                if (exp.Token.ValueText == "0")
-                {
-                    return "BigDecimal.ZERO";
-                }
-
-                return $"BigDecimal.valueOf({exp})";
-            }
-        }
-
         return exp.ToString();
     }
 
@@ -422,7 +385,7 @@ public class ConvertInvoke
     /// <returns></returns>
     public static string GenerateSimpleLambda(SimpleLambdaExpressionSyntax exp, int indent = 0)
     {
-        var left = ConvertParameter.GenerateCode(exp.Parameter) + " -> ";
+        var left = exp.Parameter.ToString() + " -> ";
         if (exp.Block == null)
         {
             return left + GenerateCode(exp.ExpressionBody, indent);
@@ -438,7 +401,7 @@ public class ConvertInvoke
     /// <returns></returns>
     public static string GenerateParenthesizedLambda(ParenthesizedLambdaExpressionSyntax exp, int indent = 0)
     {
-        var param = ConvertParameter.GenerateCode(exp.ParameterList);
+        var param = exp.ParameterList.ToString();
         if (exp.ParameterList.Parameters.Count > 1)
         {
             param = $"({param})";
@@ -515,7 +478,7 @@ public class ConvertInvoke
 
     public static string GenerateAnonymousMethod(AnonymousMethodExpressionSyntax exp, int indent = 0)
     {
-        var param = ConvertParameter.GenerateCode(exp.ParameterList);
+        var param = exp.ParameterList.ToString();
         if (exp.ParameterList.Parameters.Count > 1)
         {
             param = $"({param})";

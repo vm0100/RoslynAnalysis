@@ -30,7 +30,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(fieldDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
 
@@ -45,7 +45,7 @@ namespace RoslynAnalysis.Convert.Test
         public void LazyServiceRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(fieldDeclareSyntax).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
         }
@@ -60,7 +60,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalCreateRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(fieldDeclareSyntax).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
         }
@@ -72,7 +72,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalEnumerableCreateRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(fieldDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
 
@@ -83,7 +83,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalEnumerableCreateInitializeRewriteTest(string csharpCode, string expectCode)
         {
             var fieldDeclareSyntax = (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(fieldDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(fieldDeclareSyntax).ToFullString();
 
             Assert.Equal(expectCode, javaCode);
         }
@@ -102,7 +102,7 @@ namespace RoslynAnalysis.Convert.Test
         public void NormalPropertyRewriterTest(string csharpCode, string expectCode)
         {
             var propDeclareSyntax = (PropertyDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(csharpCode);
-            var javaCode = new FieldRewriter(true, false, false).Visit(propDeclareSyntax).ToFullString();
+            var javaCode = new CSharpToJavaRewriter().Visit(propDeclareSyntax).ToFullString();
             Assert.Equal(expectCode, javaCode);
         }
     }

@@ -29,7 +29,7 @@ public class ConvertArgument{}";
 public class ConvertArgument{{}}";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
+            memberSyntax = new CSharpToJavaRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
@@ -57,7 +57,7 @@ public class ConvertArgument{}";
 public class ConvertArgument{{}}";
 
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(code);
-            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
+            memberSyntax = new CSharpToJavaRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expected, actual);
         }
@@ -70,7 +70,7 @@ public class ConvertArgument{{}}";
         public void VisitDefinedNameTest(string source, string expect)
         {
             var memberSyntax = SyntaxFactory.ParseMemberDeclaration(source);
-            memberSyntax = new ClassRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
+            memberSyntax = new CSharpToJavaRewriter().Visit(memberSyntax) as MemberDeclarationSyntax;
             var actual = memberSyntax.ToFullString();
             Assert.Equal(expect, actual);
         }

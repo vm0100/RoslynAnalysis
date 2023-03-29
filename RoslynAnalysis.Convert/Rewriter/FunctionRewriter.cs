@@ -4,13 +4,8 @@ using System.Text;
 
 namespace RoslynAnalysis.Convert.Rewriter;
 
-public class FunctionRewriter : CSharpSyntaxRewriter
+public partial class CSharpToJavaRewriter
 {
-    public override SyntaxNode VisitBlock(BlockSyntax node)
-    {
-        return base.Visit(new FunctionBodyRewriter().Visit(node));
-    }
-
     public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
     {
         var newNode = node;

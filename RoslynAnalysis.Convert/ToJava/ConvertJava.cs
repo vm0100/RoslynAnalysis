@@ -19,18 +19,6 @@ public class ConvertJava : IAnalysisConvert
         return sbdr.ToString();
     }
 
-    public static NamespaceDeclarationSyntax VisitRewriterNamespace(NamespaceDeclarationSyntax namespaceDeclaration)
-    {
-        //return string.Join("\n", namespaceNode.Members.Where(n => n.IsKinds(SyntaxKind.ClassDeclaration, SyntaxKind.InterfaceDeclaration)).Select(syntax => ConvertTypeDeclare.GenerateCode((ClassDeclarationSyntax)syntax)));
-
-        foreach (var member in namespaceDeclaration.Members)
-        {
-            namespaceDeclaration.ReplaceNode(member, new ClassRewriter().Visit(member));
-        }
-
-        return namespaceDeclaration;
-    }
-
     public string GenerateCode(string code)
     {
         var tree = CSharpSyntaxTree.ParseText(code);
@@ -40,11 +28,8 @@ public class ConvertJava : IAnalysisConvert
 
         foreach (var member in root.Members)
         {
-            var visitMember = member;
-            if (visitMember.IsKind(SyntaxKind.NamespaceDeclaration))
-            {
-                visitMember = VisitRewriterNamespace(visitMember as NamespaceDeclarationSyntax);
-            }
+            var visitMember = new CSharpToJavaRewriter().Visit(member);
+
             sbdr.AppendLine((SyntaxKind)visitMember.RawKind switch
             {
                 SyntaxKind.FileScopedNamespaceDeclaration or SyntaxKind.NamespaceDeclaration => GenerateNamespace(visitMember as BaseNamespaceDeclarationSyntax),

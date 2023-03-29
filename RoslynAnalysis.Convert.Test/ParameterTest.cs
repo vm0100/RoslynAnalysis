@@ -1,5 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 
+using RoslynAnalysis.Convert.Rewriter;
+
 namespace RoslynAnalysis.Convert.Test
 {
     public class ParameterTest
@@ -33,7 +35,7 @@ namespace RoslynAnalysis.Convert.Test
         public void SingleParamTest(string csharpType, string expectType)
         {
             var args = csharpType.IsNullOrWhiteSpace() ? SyntaxFactory.ParameterList() : SyntaxFactory.ParseParameterList(csharpType + " arg");
-            var javaCode = ConvertParameter.GenerateCode(args);
+            var javaCode = new CSharpToJavaRewriter().Visit(args).ToFullString();
             Assert.Equal(expectType.IsNullOrWhiteSpace() ? "" : (expectType + " arg"), javaCode);
         }
 
@@ -46,7 +48,7 @@ namespace RoslynAnalysis.Convert.Test
         public static void MultipleParamTest(string csharpType, string expectType)
         {
             var args = SyntaxFactory.ParseParameterList(string.Join(", ", csharpType.Split('|').Select((type, i) => type + " arg" + i)));
-            var javaCode = ConvertParameter.GenerateCode(args);
+            var javaCode = new CSharpToJavaRewriter().Visit(args).ToFullString();
             Assert.Equal(string.Join(", ", expectType.Split('|').Select((type, i) => type + " arg" + i)), javaCode);
         }
     }

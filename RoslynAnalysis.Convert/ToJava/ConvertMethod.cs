@@ -10,13 +10,11 @@ public class ConvertMethod
 {
     public static string GenerateCode(MethodDeclarationSyntax methodNode, int indent = 0)
     {
-        methodNode = new FunctionRewriter().Visit(methodNode) as MethodDeclarationSyntax;
-
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(methodNode.GetLeadingTrivia(), indent));
         var modifier = string.Join(" ", methodNode.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
 
-        sbdr.Append($"{modifier} {ConvertType.GenerateCode(methodNode.ReturnType)} {methodNode.Identifier.ValueText.ToLowerTitleCase()}({ConvertParameter.GenerateCode(methodNode.ParameterList)})".PadIndented(indent));
+        sbdr.Append($"{modifier} {methodNode.ReturnType} {methodNode.Identifier.ValueText.ToLowerTitleCase()}({methodNode.ParameterList.ToString()})".PadIndented(indent));
         if (methodNode.Body == null)
         {
             sbdr.AppendLine(";");
@@ -31,13 +29,11 @@ public class ConvertMethod
 
     public static string GenerateCode(LocalFunctionStatementSyntax localFunction, int indent = 0)
     {
-        localFunction = new FunctionRewriter().Visit(localFunction) as LocalFunctionStatementSyntax;
-
         var sbdr = new StringBuilder(2000);
         sbdr.Append(ConvertComment.GenerateDeclareCommennt(localFunction.GetTrailingTrivia(), indent));
         var modifier = string.Join(" ", localFunction.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList());
 
-        sbdr.Append($"{modifier} {ConvertType.GenerateCode(localFunction.ReturnType)} {localFunction.Identifier.ValueText.ToLowerTitleCase()}({ConvertParameter.GenerateCode(localFunction.ParameterList)})".PadIndented(indent));
+        sbdr.Append($"{modifier} {localFunction.ReturnType} {localFunction.Identifier.ValueText.ToLowerTitleCase()}({localFunction.ParameterList.ToString()})".PadIndented(indent));
         if (localFunction.Body == null)
         {
             sbdr.AppendLine(";");
@@ -120,7 +116,7 @@ public class ConvertMethod
     public static string GenerateForEachStatement(ForEachStatementSyntax forEachStatement, int indent = 0)
     {
         var sbdr = new StringBuilder(forEachStatement.Span.Length);
-        sbdr.AppendLine($"for ({ConvertType.GenerateCode(forEachStatement.Type)} {forEachStatement.Identifier.ValueText}:{ConvertInvoke.GenerateCode(forEachStatement.Expression)}) {{".PadIndented(indent));
+        sbdr.AppendLine($"for ({forEachStatement.Type} {forEachStatement.Identifier.ValueText}:{ConvertInvoke.GenerateCode(forEachStatement.Expression)}) {{".PadIndented(indent));
         sbdr.Append(GenerateStatement(forEachStatement.Statement, indent + 1));
         sbdr.AppendLine("}".PadIndented(indent));
         return sbdr.ToString();
@@ -196,7 +192,7 @@ public class ConvertMethod
             }
             else
             {
-                var expType = ConvertType.GenerateCode(catchSyntax.Declaration.Type);
+                var expType = catchSyntax.Declaration.Type;
                 var variable = catchSyntax.Declaration.Identifier.ValueText;
                 sbdr.AppendLine(" catch (" + expType + (variable.IsNullOrWhiteSpace() ? "" : (" " + variable)) + ") {");
             }
@@ -246,7 +242,7 @@ public class ConvertMethod
             return string.Empty;
         }
 
-        return string.Join(", ", declarationSyntax.Variables.Select(variableSyntax => $"{ConvertType.GenerateCode(declarationSyntax.Type)} {variableSyntax.Identifier.ValueText} {(variableSyntax.Initializer == null ? ";" : $"= {ConvertInvoke.GenerateCode(variableSyntax.Initializer.Value)}")}"));
+        return string.Join(", ", declarationSyntax.Variables.Select(variableSyntax => $"{declarationSyntax.Type} {variableSyntax.Identifier.ValueText} {(variableSyntax.Initializer == null ? ";" : $"= {ConvertInvoke.GenerateCode(variableSyntax.Initializer.Value)}")}"));
     }
 
     public static string GenerateThrowException(ThrowStatementSyntax statement, int indent = 0)

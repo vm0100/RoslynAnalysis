@@ -22,7 +22,7 @@ public class ConvertField
         }
 
         var modifier = $"{string.Join(" ", fieldNode.Modifiers.Select(ConvertCommon.KeywordToJava).Where(StringExtensions.IsNotNullOrWhiteSpace).ToList())}{(fieldNode.Modifiers.Any() ? " " : "")}";
-        var type = ConvertType.GenerateCode(fieldNode.Declaration.Type);
+        var type = fieldNode.Declaration.Type.ToString();
 
         if (modifier.IsNotNullOrWhiteSpace())
         {

@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 
 namespace RoslynAnalysis.Convert.Rewriter;
 
-public class ObjectCreationRewriter : CSharpSyntaxRewriter
+public partial class CSharpToJavaRewriter
 {
     public override SyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
     {
@@ -25,14 +25,9 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
             }
         }
 
-        node = node.WithType(new TypeRewriter().Visit(node.Type) as TypeSyntax);
+        node = node.WithType(this.Visit(node.Type) as TypeSyntax);
 
         return base.VisitObjectCreationExpression(node);
-    }
-
-    public override SyntaxNode VisitGenericName(GenericNameSyntax node)
-    {
-        return new TypeRewriter().Visit(node);
     }
 
     public SyntaxNode RewriterList(ObjectCreationExpressionSyntax node)
@@ -112,11 +107,6 @@ public class ObjectCreationRewriter : CSharpSyntaxRewriter
                         SyntaxFactory.SeparatedList<ExpressionSyntax>(elmInitExpList, elmInitCloseTokenList)))));
 
         return base.VisitInitializerExpression(newNode);
-    }
-
-    public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
-    {
-        return new MemberAccessRewriter().Visit(node);
     }
 
 }
